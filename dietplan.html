@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Diet Plans – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<style>
+.stab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.stab.active{border-color:var(--primary);color:var(--primary);background:rgba(108,99,255,.1);}
+.dpanel{display:none;}.dpanel.active{display:block;}
+.meal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.meal-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;}
+.meal-lbl{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+<aside class="admin-sidebar" id="adminSidebar">
+  <a href="/admin/dashboard" class="admin-brand">
+    <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+    <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+  </a>
+  <nav class="admin-nav">
+    <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+    <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+    <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+    <a href="/admin/dietplans" class="admin-nav-item active"><i class="fas fa-utensils"></i> Diet Plans</a>
+    <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+    <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+    <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+    <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+  </nav>
+  <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+</aside>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+    <span class="admin-topbar-title">Diet Plans</span>
+    <div class="admin-topbar-actions">
+      <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('addDietModal')"><i class="fas fa-plus"></i> Add Plan</button>
+    </div>
+  </header>
+
+  <div class="admin-page">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title"><i class="fas fa-utensils" style="color:var(--accent);margin-right:8px;"></i>Diet Plans (<span th:text="${#lists.size(plans)}">0</span>)</span>
+        <div class="search-wrap" style="width:220px;"><i class="fas fa-search"></i><input type="text" class="search-input" id="dSearch" placeholder="Search..." oninput="searchTable('dSearch','dTable')"/></div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="dTable">
+          <thead><tr><th>ID</th><th>Plan Name</th><th>Category</th><th>For Goal</th><th>Diet Pref</th><th>Condition</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr th:each="p,i : ${plans}">
+              <td th:text="${i.count}">1</td>
+              <td>
+                <div style="font-weight:700;" th:text="${p.planName}">Name</div>
+                <div style="font-size:11px;color:var(--text-muted);" th:text="${p.description != null ? #strings.abbreviate(p.description,45) : ''}">-</div>
+              </td>
+              <td><span class="badge" th:classappend="${p.category == 'Fitness'} ? 'badge-primary' : (${p.category == 'Medical'} ? 'badge-danger' : (${p.category == 'Women Health'} ? 'badge-warning' : 'badge-success'))" th:text="${p.category}">Cat</span></td>
+              <td style="font-size:12px;" th:text="${p.forGoal != null ? p.forGoal : '–'}">–</td>
+              <td style="font-size:12px;" th:text="${p.forDiet != null ? p.forDiet : '–'}">–</td>
+              <td style="font-size:12px;" th:text="${p.forCondition != null ? p.forCondition : '–'}">–</td>
+              <td th:text="${p.duration}">–</td>
+              <td><span class="badge" th:classappend="${p.status == 'Active'} ? 'badge-success' : 'badge-danger'" th:text="${p.status}">Active</span></td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-secondary btn-sm btn-icon" title="Edit" th:onclick="'openEditModal(' + ${p.id} + ')'"><i class="fas fa-edit"></i></button>
+                  <form th:action="@{/admin/dietplans/delete/{id}(id=${p.id})}" method="post" style="display:inline;" onsubmit="return confirm('Delete this diet plan?')">
+                    <button type="submit" class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(plans)}"><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">No diet plans yet. Click "Add Plan" to create one.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Plan data store -->
+<div id="planStore" style="display:none;">
+  <span th:each="p : ${plans}"
+        th:id="'dp_' + ${p.id}"
+        th:data-id="${p.id}"
+        th:data-name="${p.planName}"
+        th:data-cat="${p.category}"
+        th:data-target="${p.target != null ? p.target : ''}"
+        th:data-duration="${p.duration != null ? p.duration : ''}"
+        th:data-goal="${p.forGoal != null ? p.forGoal : ''}"
+        th:data-diet="${p.forDiet != null ? p.forDiet : ''}"
+        th:data-cond="${p.forCondition != null ? p.forCondition : ''}"
+        th:data-desc="${p.description != null ? p.description : ''}"
+        th:data-schedule="${p.weeklySchedule != null ? p.weeklySchedule : ''}"
+        th:data-status="${p.status}"></span>
+</div>
+
+<!-- ══ ADD MODAL ══ -->
+<div class="modal-overlay" id="addDietModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-plus-circle" style="color:var(--accent);margin-right:8px;"></i>Add Diet Plan</span>
+      <button class="modal-close" onclick="closeModal('addDietModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="addDietForm" action="/admin/dietplans/add" method="post">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="planName" class="form-control" required placeholder="e.g. Weight Loss – Veg"/></div>
+        <div class="form-group"><label class="form-label">Category *</label>
+          <select name="category" class="form-control" required>
+            <option value="Fitness">🏋️ Fitness</option>
+            <option value="Medical">💊 Medical</option>
+            <option value="Women Health">🌸 Women Health</option>
+            <option value="Nutrition">🥗 Nutrition</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Target</label><input type="text" name="target" class="form-control" placeholder="e.g. Fat Loss"/></div>
+        <div class="form-group"><label class="form-label">Duration</label><input type="text" name="duration" class="form-control" placeholder="e.g. 4 Weeks"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">For Goal (Question 1)</label>
+          <select name="forGoal" class="form-control">
+            <option value="">Any Goal</option>
+            <option value="Lose Weight">🔥 Lose Weight</option>
+            <option value="Build Muscle">💪 Build Muscle</option>
+            <option value="Stay Fit">⚡ Stay Fit</option>
+            <option value="Flexibility">🧘 Flexibility</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Diet Preference (Question 3)</label>
+          <select name="forDiet" class="form-control">
+            <option value="No Preference">Any</option>
+            <option value="Vegetarian">🥗 Vegetarian</option>
+            <option value="Non-Vegetarian">🍗 Non-Vegetarian</option>
+            <option value="Vegan">🌿 Vegan</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Health Condition (Question 5)</label>
+          <select name="forCondition" class="form-control">
+            <option value="No">None</option>
+            <option value="Diabetes">💉 Diabetes</option>
+            <option value="Thyroid">🦋 Thyroid</option>
+            <option value="PCOS / Hormonal">🌸 PCOS / Hormonal</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2" placeholder="Brief description of this plan..."></textarea></div>
+
+      <!-- Weekly Schedule -->
+      <div class="form-group">
+        <label class="form-label" style="margin-bottom:8px;">📅 Weekly Schedule (Breakfast · Lunch · Snacks · Dinner)</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <button type="button" class="stab active" onclick="switchTab('a','Mon',this)">Mon</button>
+          <button type="button" class="stab" onclick="switchTab('a','Tue',this)">Tue</button>
+          <button type="button" class="stab" onclick="switchTab('a','Wed',this)">Wed</button>
+          <button type="button" class="stab" onclick="switchTab('a','Thu',this)">Thu</button>
+          <button type="button" class="stab" onclick="switchTab('a','Fri',this)">Fri</button>
+          <button type="button" class="stab" onclick="switchTab('a','Sat',this)">Sat</button>
+          <button type="button" class="stab" onclick="switchTab('a','Sun',this)">Sun</button>
+        </div>
+        <div id="a_Mon" class="dpanel active"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast (7–8 AM)</div><input type="text" id="a_Mon_b" class="form-control" placeholder="e.g. Oats + banana + milk"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch (12:30–1:30 PM)</div><input type="text" id="a_Mon_l" class="form-control" placeholder="e.g. Rice + dal + salad"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks (4–5 PM)</div><input type="text" id="a_Mon_s" class="form-control" placeholder="e.g. Fruits + nuts"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner (7:30–8:30 PM)</div><input type="text" id="a_Mon_d" class="form-control" placeholder="e.g. Chicken + veggies"/></div></div></div>
+        <div id="a_Tue" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Tue_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Tue_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Tue_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Tue_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <div id="a_Wed" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Wed_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Wed_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Wed_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Wed_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <div id="a_Thu" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Thu_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Thu_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Thu_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Thu_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <div id="a_Fri" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Fri_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Fri_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Fri_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Fri_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <div id="a_Sat" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Sat_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Sat_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Sat_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Sat_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <div id="a_Sun" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="a_Sun_b" class="form-control" placeholder="Breakfast"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="a_Sun_l" class="form-control" placeholder="Lunch"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="a_Sun_s" class="form-control" placeholder="Snacks"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="a_Sun_d" class="form-control" placeholder="Dinner"/></div></div></div>
+        <input type="hidden" name="weeklySchedule" id="addSchedHidden"/>
+      </div>
+      <button type="button" class="btn btn-primary" style="width:100%;" onclick="submitAdd()"><i class="fas fa-save"></i> Add Diet Plan</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay" id="editDietModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-edit" style="color:var(--accent);margin-right:8px;"></i>Edit Diet Plan</span>
+      <button class="modal-close" onclick="closeModal('editDietModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="editDietForm" method="post">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="planName" id="edName" class="form-control" required/></div>
+        <div class="form-group"><label class="form-label">Category</label>
+          <select name="category" id="edCat" class="form-control">
+            <option value="Fitness">🏋️ Fitness</option>
+            <option value="Medical">💊 Medical</option>
+            <option value="Women Health">🌸 Women Health</option>
+            <option value="Nutrition">🥗 Nutrition</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Target</label><input type="text" name="target" id="edTarget" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Duration</label><input type="text" name="duration" id="edDuration" class="form-control"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">For Goal (Question 1)</label>
+          <select name="forGoal" id="edGoal" class="form-control">
+            <option value="">Any Goal</option>
+            <option value="Lose Weight">🔥 Lose Weight</option>
+            <option value="Build Muscle">💪 Build Muscle</option>
+            <option value="Stay Fit">⚡ Stay Fit</option>
+            <option value="Flexibility">🧘 Flexibility</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Diet Preference (Question 3)</label>
+          <select name="forDiet" id="edDiet" class="form-control">
+            <option value="No Preference">Any</option>
+            <option value="Vegetarian">🥗 Vegetarian</option>
+            <option value="Non-Vegetarian">🍗 Non-Vegetarian</option>
+            <option value="Vegan">🌿 Vegan</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Health Condition (Question 5)</label>
+          <select name="forCondition" id="edCond" class="form-control">
+            <option value="No">None</option>
+            <option value="Diabetes">💉 Diabetes</option>
+            <option value="Thyroid">🦋 Thyroid</option>
+            <option value="PCOS / Hormonal">🌸 PCOS / Hormonal</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" id="edStatus" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="edDesc" class="form-control" rows="2"></textarea></div>
+
+      <!-- Weekly Schedule Edit -->
+      <div class="form-group">
+        <label class="form-label" style="margin-bottom:8px;">📅 Weekly Schedule</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <button type="button" class="stab active" onclick="switchTab('e','Mon',this)">Mon</button>
+          <button type="button" class="stab" onclick="switchTab('e','Tue',this)">Tue</button>
+          <button type="button" class="stab" onclick="switchTab('e','Wed',this)">Wed</button>
+          <button type="button" class="stab" onclick="switchTab('e','Thu',this)">Thu</button>
+          <button type="button" class="stab" onclick="switchTab('e','Fri',this)">Fri</button>
+          <button type="button" class="stab" onclick="switchTab('e','Sat',this)">Sat</button>
+          <button type="button" class="stab" onclick="switchTab('e','Sun',this)">Sun</button>
+        </div>
+        <div id="e_Mon" class="dpanel active"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Mon_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Mon_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Mon_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Mon_d" class="form-control"/></div></div></div>
+        <div id="e_Tue" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Tue_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Tue_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Tue_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Tue_d" class="form-control"/></div></div></div>
+        <div id="e_Wed" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Wed_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Wed_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Wed_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Wed_d" class="form-control"/></div></div></div>
+        <div id="e_Thu" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Thu_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Thu_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Thu_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Thu_d" class="form-control"/></div></div></div>
+        <div id="e_Fri" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Fri_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Fri_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Fri_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Fri_d" class="form-control"/></div></div></div>
+        <div id="e_Sat" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Sat_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Sat_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Sat_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Sat_d" class="form-control"/></div></div></div>
+        <div id="e_Sun" class="dpanel"><div class="meal-grid"><div class="meal-block"><div class="meal-lbl">🌅 Breakfast</div><input type="text" id="e_Sun_b" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">☀️ Lunch</div><input type="text" id="e_Sun_l" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🍎 Snacks</div><input type="text" id="e_Sun_s" class="form-control"/></div><div class="meal-block"><div class="meal-lbl">🌙 Dinner</div><input type="text" id="e_Sun_d" class="form-control"/></div></div></div>
+        <input type="hidden" name="weeklySchedule" id="editSchedHidden"/>
+      </div>
+      <button type="button" class="btn btn-primary" style="width:100%;" onclick="submitEdit()"><i class="fas fa-save"></i> Save Changes</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- VIEW SCHEDULE MODAL -->
+<div class="modal-overlay" id="viewSchedModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title" id="viewSchedTitle"><i class="fas fa-calendar-week" style="color:var(--primary);margin-right:8px;"></i>Weekly Schedule</span>
+      <button class="modal-close" onclick="closeModal('viewSchedModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="viewSchedBody"></div>
+  </div>
+</div>
+<script src="/js/admin.js"></script>
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function switchTab(prefix, day, btn) {
+  // Update tab buttons
+  btn.closest('div').querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Show correct panel
+  DAYS.forEach(d => {
+    const el = document.getElementById(prefix + '_' + d);
+    if (el) el.classList.toggle('active', d === day);
+  });
+}
+
+// Build JSON from schedule inputs — called BEFORE form submit
+function buildScheduleJson(prefix) {
+  const sched = {};
+  DAYS.forEach(day => {
+    sched[day] = {
+      breakfast: (document.getElementById(prefix + '_' + day + '_b') || {}).value || '',
+      lunch:     (document.getElementById(prefix + '_' + day + '_l') || {}).value || '',
+      snacks:    (document.getElementById(prefix + '_' + day + '_s') || {}).value || '',
+      dinner:    (document.getElementById(prefix + '_' + day + '_d') || {}).value || ''
+    };
+  });
+  return JSON.stringify(sched);
+}
+
+// Submit ADD form — build JSON first, then submit
+function submitAdd() {
+  document.getElementById('addSchedHidden').value = buildScheduleJson('a');
+  document.getElementById('addDietForm').submit();
+}
+
+// Submit EDIT form — build JSON first, then submit
+function submitEdit() {
+  document.getElementById('editSchedHidden').value = buildScheduleJson('e');
+  document.getElementById('editDietForm').submit();
+}
+
+// View schedule modal
+function viewSchedule(id) {
+  const el = document.getElementById('dp_' + id);
+  if (!el) return;
+  const name = el.dataset.name || 'Diet Plan';
+  const schedStr = el.dataset.schedule || '';
+  document.getElementById('viewSchedTitle').innerHTML = '<i class="fas fa-calendar-week" style="color:var(--primary);margin-right:8px;"></i>' + name + ' � Weekly Schedule';
+  let sched = {};
+  try { sched = JSON.parse(schedStr); } catch(e) {}
+  const MEAL_META = {
+    breakfast: { icon:'??', label:'Breakfast', time:'7:00 � 8:00 AM',   bg:'rgba(255,209,102,.12)', border:'rgba(255,209,102,.3)', color:'#ffd166' },
+    lunch:     { icon:'??', label:'Lunch',     time:'12:30 � 1:30 PM',  bg:'rgba(108,99,255,.12)',  border:'rgba(108,99,255,.3)',  color:'var(--primary)' },
+    snacks:    { icon:'??', label:'Snacks',    time:'4:00 � 5:00 PM',   bg:'rgba(67,233,123,.12)',  border:'rgba(67,233,123,.3)',  color:'var(--accent)' },
+    dinner:    { icon:'??', label:'Dinner',    time:'7:30 � 8:30 PM',   bg:'rgba(255,101,132,.12)', border:'rgba(255,101,132,.3)', color:'#ff6584' }
+  };
+  const DAY_FULL = {Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
+  const today = new Date().toLocaleDateString('en-US',{weekday:'short'}).slice(0,3);
+  // Day tabs
+  let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">';
+  DAYS.forEach(d => {
+    const isToday = d === today;
+    html += '<button onclick="showVDay(\'' + d + '\',this)" id="vtab_' + d + '" style="padding:7px 14px;border-radius:20px;border:1.5px solid ' + (isToday ? 'var(--primary)' : 'var(--border)') + ';background:' + (isToday ? 'var(--primary)' : 'transparent') + ';color:' + (isToday ? '#fff' : 'var(--text-muted)') + ';font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;">' + d + (isToday ? ' ??' : '') + '</button>';
+  });
+  html += '</div>';
+  // Day panels
+  DAYS.forEach(d => {
+    const dayData = sched[d] || {};
+    const isToday = d === today;
+    html += '<div id="vday_' + d + '" style="display:' + (isToday ? 'block' : 'none') + ';">';
+    html += '<div style="font-size:14px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">';
+    html += '<span>' + (DAY_FULL[d] || d) + '</span>';
+    if (isToday) html += '<span style="background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">TODAY</span>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+    ['breakfast','lunch','snacks','dinner'].forEach(meal => {
+      const m = MEAL_META[meal];
+      const val = dayData[meal] || '';
+      html += '<div style="background:' + m.bg + ';border:1px solid ' + m.border + ';border-radius:12px;padding:14px;display:flex;gap:14px;align-items:flex-start;">';
+      html += '<div style="flex-shrink:0;text-align:center;min-width:72px;">';
+      html += '<div style="font-size:22px;margin-bottom:4px;">' + m.icon + '</div>';
+      html += '<div style="font-size:10px;font-weight:800;color:' + m.color + ';white-space:nowrap;">' + m.time + '</div>';
+      html += '</div>';
+      html += '<div style="flex:1;">';
+      html += '<div style="font-size:11px;font-weight:800;color:' + m.color + ';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">' + m.label + '</div>';
+      if (val) {
+        html += '<div style="font-size:14px;font-weight:600;line-height:1.6;">' + val + '</div>';
+      } else {
+        html += '<div style="font-size:13px;color:var(--text-muted);font-style:italic;">Not set</div>';
+      }
+      html += '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="margin-top:14px;padding:12px 16px;background:rgba(76,201,240,.1);border:1px solid rgba(76,201,240,.25);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:13px;"><span style="font-size:18px;">??</span><span><strong>Hydration:</strong> Drink 8�10 glasses of water daily. Have a glass 30 min before each meal.</span></div>';
+  document.getElementById('viewSchedBody').innerHTML = html;
+  openModal('viewSchedModal');
+}
+
+function showVDay(day, btn) {
+  DAYS.forEach(d => {
+    const el = document.getElementById('vday_' + d);
+    const tb = document.getElementById('vtab_' + d);
+    if (el) el.style.display = d === day ? 'block' : 'none';
+    if (tb) {
+      tb.style.background = d === day ? 'var(--primary)' : 'transparent';
+      tb.style.color = d === day ? '#fff' : 'var(--text-muted)';
+      tb.style.borderColor = d === day ? 'var(--primary)' : 'var(--border)';
+    }
+  });
+}
+// Open edit modal and populate all fields
+function openEditModal(id) {
+  const el = document.getElementById('dp_' + id);
+  if (!el) { AdminToast.show('Plan data not found', 'error'); return; }
+
+  document.getElementById('editDietForm').action = '/admin/dietplans/edit/' + id;
+  document.getElementById('edName').value     = el.dataset.name     || '';
+  document.getElementById('edCat').value      = el.dataset.cat      || 'Fitness';
+  document.getElementById('edTarget').value   = el.dataset.target   || '';
+  document.getElementById('edDuration').value = el.dataset.duration || '';
+  document.getElementById('edGoal').value     = el.dataset.goal     || '';
+  document.getElementById('edDiet').value     = el.dataset.diet     || 'No Preference';
+  document.getElementById('edCond').value     = el.dataset.cond     || 'No';
+  document.getElementById('edDesc').value     = el.dataset.desc     || '';
+  document.getElementById('edStatus').value   = el.dataset.status   || 'Active';
+
+  // Populate schedule fields from stored JSON
+  const schedStr = el.dataset.schedule || '';
+  if (schedStr) {
+    try {
+      const sched = JSON.parse(schedStr);
+      DAYS.forEach(day => {
+        const setVal = (suffix, key) => {
+          const inp = document.getElementById('e_' + day + '_' + suffix);
+          if (inp && sched[day]) inp.value = sched[day][key] || '';
+        };
+        setVal('b', 'breakfast');
+        setVal('l', 'lunch');
+        setVal('s', 'snacks');
+        setVal('d', 'dinner');
+      });
+    } catch(e) { console.error('Schedule parse error', e); }
+  } else {
+    // Clear all fields
+    DAYS.forEach(day => {
+      ['b','l','s','d'].forEach(s => {
+        const inp = document.getElementById('e_' + day + '_' + s);
+        if (inp) inp.value = '';
+      });
+    });
+  }
+
+  // Reset to Mon tab
+  DAYS.forEach((d, i) => {
+    const panel = document.getElementById('e_' + d);
+    if (panel) panel.classList.toggle('active', i === 0);
+  });
+  // Reset tab buttons
+  document.querySelectorAll('#editDietModal .stab').forEach((b, i) => b.classList.toggle('active', i === 0));
+
+  openModal('editDietModal');
+}
+</script>
+</body>
+</html>

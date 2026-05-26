@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Settings – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<style>
+/* ── Settings Layout ── */
+.settings-wrap{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:start;}
+.settings-sidebar{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:8px;position:sticky;top:80px;}
+.settings-tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);transition:all .2s;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left;}
+.settings-tab:hover{background:var(--primary-light);color:var(--primary);}
+.settings-tab.active{background:var(--primary);color:#fff;}
+.settings-tab i{width:16px;text-align:center;}
+.settings-panel{display:none;animation:fadeIn .3s ease;}
+.settings-panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── Setting Row ── */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-label h4{font-size:14px;font-weight:600;margin-bottom:3px;}
+.setting-label p{font-size:12px;color:var(--text-muted);line-height:1.4;}
+
+/* ── Toggle ── */
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:26px;cursor:pointer;transition:.3s;}
+.toggle-track::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.toggle input:checked + .toggle-track{background:var(--primary);}
+.toggle input:checked + .toggle-track::before{transform:translateX(22px);}
+
+/* ── Theme Cards ── */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.theme-card{border:2px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:all .25s;text-align:center;}
+.theme-card:hover{border-color:var(--primary);transform:translateY(-2px);}
+.theme-card.active{border-color:var(--primary);background:var(--primary-light);}
+.theme-card .tc-preview{height:64px;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.theme-card.dark-card .tc-preview{background:#0a0a14;border:1px solid #2a2a4a;}
+.theme-card.light-card .tc-preview{background:#f0f2ff;border:1px solid #ddddf0;}
+.theme-card h4{font-size:13px;font-weight:700;margin-bottom:2px;}
+.theme-card p{font-size:11px;color:var(--text-muted);}
+
+/* ── Info Row ── */
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-row .info-key{font-size:13px;color:var(--text-muted);font-weight:500;}
+.info-row .info-val{font-size:13px;font-weight:700;}
+
+/* ── About Card ── */
+.about-hero{text-align:center;padding:32px 20px;}
+.about-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;margin:0 auto 16px;box-shadow:0 8px 25px rgba(108,99,255,.4);}
+.about-hero h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+.about-hero p{color:var(--text-muted);font-size:14px;margin-bottom:20px;}
+.about-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* ── Admin Profile ── */
+.admin-profile-card{display:flex;align-items:center;gap:16px;padding:20px;background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(255,101,132,.1));border:1px solid rgba(108,99,255,.3);border-radius:14px;margin-bottom:20px;}
+.admin-avatar{width:56px;height:56px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
+.admin-profile-info h3{font-size:16px;font-weight:800;margin-bottom:3px;}
+.admin-profile-info p{font-size:13px;color:var(--text-muted);}
+
+@media(max-width:768px){
+  .settings-wrap{grid-template-columns:1fr;}
+  .settings-sidebar{position:static;display:flex;flex-wrap:wrap;gap:4px;}
+  .settings-tab{flex:1;min-width:120px;justify-content:center;}
+}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item active"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Settings</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()" title="Toggle theme"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <div class="settings-wrap">
+
+        <!-- Left Nav -->
+        <div class="settings-sidebar">
+          <button class="settings-tab active" onclick="showPanel('appearance',this)"><i class="fas fa-palette"></i> Appearance</button>
+          <button class="settings-tab" onclick="showPanel('system',this)"><i class="fas fa-server"></i> System Info</button>
+          <button class="settings-tab" onclick="showPanel('security',this)"><i class="fas fa-shield-alt"></i> Security</button>
+          <button class="settings-tab" onclick="showPanel('account',this)"><i class="fas fa-user-cog"></i> Admin Account</button>
+          <button class="settings-tab" onclick="showPanel('about',this)"><i class="fas fa-info-circle"></i> About</button>
+        </div>
+
+        <!-- Right Content -->
+        <div>
+
+          <!-- ── APPEARANCE ── -->
+          <div class="settings-panel active" id="panel-appearance">
+            <div class="admin-card" style="margin-bottom:16px;">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-palette" style="color:var(--primary);margin-right:8px;"></i>Theme</span>
+              </div>
+              <div class="theme-grid">
+                <div class="theme-card dark-card" id="darkCard" onclick="setTheme('dark')">
+                  <div class="tc-preview">🌙</div>
+                  <h4>Dark Mode</h4>
+                  <p>Easy on the eyes</p>
+                </div>
+                <div class="theme-card light-card" id="lightCard" onclick="setTheme('light')">
+                  <div class="tc-preview">☀️</div>
+                  <h4>Light Mode</h4>
+                  <p>Clean and bright</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-sliders-h" style="color:var(--primary);margin-right:8px;"></i>Display Preferences</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Compact Tables</h4>
+                  <p>Reduce row height in data tables for more content</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="compactToggle" onchange="savePref()"/>
+                  <div class="toggle-track"></div>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Animations</h4>
+                  <p>Enable smooth transitions and hover effects</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="animToggle" checked onchange="savePref()"/>
+                  <div class="toggle-track"></div>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Show Video Previews</h4>
+                  <p>Display video thumbnails in workout plan table</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="videoPreviewToggle" checked onchange="savePref()"/>
+                  <div class="toggle-track"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SYSTEM INFO ── -->
+          <div class="settings-panel" id="panel-system">
+            <div class="admin-card" style="margin-bottom:16px;">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-server" style="color:var(--info);margin-right:8px;"></i>Application Status</span>
+                <span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px;margin-right:4px;"></i>Running</span>
+              </div>
+              <div class="info-row"><span class="info-key">Application Name</span><span class="info-val">Elite Fitness Platform</span></div>
+              <div class="info-row"><span class="info-key">Version</span><span class="info-val"><span class="badge badge-primary">v2.0</span></span></div>
+              <div class="info-row"><span class="info-key">Server Port</span><span class="info-val"><span class="badge badge-info">8062</span></span></div>
+              <div class="info-row"><span class="info-key">Framework</span><span class="info-val">Spring Boot 3.2.2</span></div>
+              <div class="info-row"><span class="info-key">Java Version</span><span class="info-val">Java 17</span></div>
+              <div class="info-row"><span class="info-key">Template Engine</span><span class="info-val">Thymeleaf</span></div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-database" style="color:var(--accent);margin-right:8px;"></i>Database</span>
+                <span class="badge badge-success">Connected</span>
+              </div>
+              <div class="info-row"><span class="info-key">Type</span><span class="info-val">MySQL</span></div>
+              <div class="info-row"><span class="info-key">Database</span><span class="info-val">health_db</span></div>
+              <div class="info-row"><span class="info-key">Host</span><span class="info-val">localhost:3306</span></div>
+              <div class="info-row"><span class="info-key">ORM</span><span class="info-val">Hibernate / JPA</span></div>
+              <div class="info-row"><span class="info-key">DDL Auto</span><span class="info-val"><span class="badge badge-warning">update</span></span></div>
+            </div>
+          </div>
+
+          <!-- ── SECURITY ── -->
+          <div class="settings-panel" id="panel-security">
+            <div class="admin-card" style="margin-bottom:16px;">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-shield-alt" style="color:var(--accent);margin-right:8px;"></i>Authentication</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Admin Password</h4>
+                  <p>Current admin login password (change in production)</p>
+                </div>
+                <span class="badge badge-warning">admin123</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Admin Email</h4>
+                  <p>Default admin login email</p>
+                </div>
+                <span style="font-size:13px;font-weight:600;">admin@gmail.com</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Session Management</h4>
+                  <p>Sessions stored in browser localStorage</p>
+                </div>
+                <span class="badge badge-info">Client-side</span>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-lock" style="color:var(--warning);margin-right:8px;"></i>Access Control</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>User Registration</h4>
+                  <p>Allow new users to register accounts</p>
+                </div>
+                <label class="toggle"><input type="checkbox" checked/><div class="toggle-track"></div></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">
+                  <h4>Block Inactive Users</h4>
+                  <p>Prevent inactive users from logging in</p>
+                </div>
+                <label class="toggle"><input type="checkbox"/><div class="toggle-track"></div></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── ADMIN ACCOUNT ── -->
+          <div class="settings-panel" id="panel-account">
+            <div class="admin-profile-card">
+              <div class="admin-avatar">A</div>
+              <div class="admin-profile-info">
+                <h3>Admin</h3>
+                <p>admin@gmail.com &nbsp;·&nbsp; <span class="badge badge-primary">Administrator</span></p>
+              </div>
+            </div>
+            <div class="admin-card" style="margin-bottom:16px;">
+              <div class="admin-card-header" style="margin-bottom:18px;">
+                <span class="admin-card-title"><i class="fas fa-user-edit" style="color:var(--primary);margin-right:8px;"></i>Quick Actions</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label"><h4>Manage Users</h4><p>View, add, edit or block user accounts</p></div>
+                <a href="/admin/users" class="btn btn-secondary btn-sm"><i class="fas fa-users"></i> Go to Users</a>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label"><h4>View Reports</h4><p>Analytics and user statistics</p></div>
+                <a href="/admin/reports" class="btn btn-secondary btn-sm"><i class="fas fa-chart-bar"></i> Reports</a>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label"><h4>Setup Questions</h4><p>Manage onboarding questionnaire</p></div>
+                <a href="/admin/setup-questions" class="btn btn-secondary btn-sm"><i class="fas fa-question-circle"></i> Questions</a>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label"><h4>Sign Out</h4><p>Log out of the admin panel</p></div>
+                <button class="btn btn-danger btn-sm" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── ABOUT ── -->
+          <div class="settings-panel" id="panel-about">
+            <div class="admin-card">
+              <div class="about-hero">
+                <div class="about-logo">🏋️</div>
+                <h2>Elite Fitness</h2>
+                <p>A complete health &amp; fitness management platform connecting users with personalized workout videos, diet plans, and progress tracking — all managed through a powerful admin panel.</p>
+                <div class="about-tags">
+                  <span class="badge badge-primary">Version 2.0</span>
+                  <span class="badge badge-info">Spring Boot 3.2.2</span>
+                  <span class="badge badge-success">Java 17</span>
+                  <span class="badge badge-warning">MySQL</span>
+                  <span class="badge badge-primary">Thymeleaf</span>
+                </div>
+              </div>
+              <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:4px;">
+                <div class="info-row"><span class="info-key">User Portal</span><span class="info-val">Setup → Videos → Diet → Progress</span></div>
+                <div class="info-row"><span class="info-key">Admin Portal</span><span class="info-val">Full CRUD for all content</span></div>
+                <div class="info-row"><span class="info-key">Video Support</span><span class="info-val">Local MP4 files</span></div>
+                <div class="info-row"><span class="info-key">Personalization</span><span class="info-val">Setup questionnaire → matched plans</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+function showPanel(id, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setTheme(t) {
+  AdminTheme.apply(t);
+  localStorage.setItem('admin_theme', t);
+  document.getElementById('darkCard').classList.toggle('active', t === 'dark');
+  document.getElementById('lightCard').classList.toggle('active', t === 'light');
+  AdminToast.show((t === 'dark' ? '🌙 Dark' : '☀️ Light') + ' mode activated', 'success');
+}
+
+function savePref() {
+  localStorage.setItem('admin_prefs', JSON.stringify({
+    compact: document.getElementById('compactToggle').checked,
+    animations: document.getElementById('animToggle').checked,
+    videoPreview: document.getElementById('videoPreviewToggle').checked
+  }));
+  AdminToast.show('Preference saved', 'success');
+}
+
+// Init
+const t = localStorage.getItem('admin_theme') || 'dark';
+document.getElementById('darkCard').classList.toggle('active', t === 'dark');
+document.getElementById('lightCard').classList.toggle('active', t === 'light');
+
+const prefs = JSON.parse(localStorage.getItem('admin_prefs') || '{}');
+if (prefs.compact !== undefined) document.getElementById('compactToggle').checked = prefs.compact;
+if (prefs.animations !== undefined) document.getElementById('animToggle').checked = prefs.animations;
+if (prefs.videoPreview !== undefined) document.getElementById('videoPreviewToggle').checked = prefs.videoPreview;
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Announcements – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item active"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Announcements</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addAnnModal')"><i class="fas fa-plus"></i> New Announcement</button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <!-- Announcement Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:20px;">
+        <div th:each="a : ${announcements}"
+             th:data-id="${a.id}"
+             th:data-title="${a.title}"
+             th:data-msg="${a.message}"
+             th:data-type="${a.type}"
+             th:data-status="${a.status}"
+             style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;"
+               th:style="${a.type == 'Success'} ? 'background:linear-gradient(90deg,#43e97b,#38f9d7);' : (${a.type == 'Warning'} ? 'background:linear-gradient(90deg,#ffd166,#ff6584);' : 'background:linear-gradient(90deg,#4cc9f0,#6c63ff);')">
+          </div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;"
+                   th:style="${a.type == 'Success'} ? 'background:rgba(67,233,123,.15);color:#43e97b;' : (${a.type == 'Warning'} ? 'background:rgba(255,209,102,.15);color:#ffd166;' : 'background:rgba(76,201,240,.15);color:#4cc9f0;')">
+                <i class="fas" th:classappend="${a.type == 'Success'} ? 'fa-check-circle' : (${a.type == 'Warning'} ? 'fa-exclamation-triangle' : 'fa-info-circle')"></i>
+              </div>
+              <span class="badge" th:classappend="${a.status == 'Active'} ? 'badge-success' : 'badge-danger'" th:text="${a.status}">Active</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditFromCard(this)" title="Edit"><i class="fas fa-edit"></i></button>
+              <form th:action="@{/admin/announcements/delete/{id}(id=${a.id})}" method="post" th:id="|delA${a.id}|" style="display:inline;">
+                <button type="button" class="btn btn-danger btn-sm btn-icon"
+                        th:attr="onclick='confirmDelete(\'delA' + ${a.id} + '\',\'Delete this announcement?\')'">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;" th:text="${a.title}">Title</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;" th:text="${a.message}">Message</div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;">
+            <i class="fas fa-calendar-alt"></i><span th:text="${a.createdDate}">–</span>
+          </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(announcements)}"
+             style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);background:var(--card);border:1px solid var(--border);border-radius:16px;">
+          <i class="fas fa-bullhorn" style="font-size:40px;opacity:.3;display:block;margin-bottom:12px;"></i>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No announcements yet</div>
+          <div style="font-size:13px;">Click "New Announcement" to post one to all users.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addAnnModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title"><i class="fas fa-bullhorn" style="color:var(--warning);margin-right:8px;"></i>New Announcement</span><button class="modal-close" onclick="closeModal('addAnnModal')"><i class="fas fa-times"></i></button></div>
+    <form action="/admin/announcements/add" method="post">
+      <div class="form-group"><label class="form-label">Title *</label><input type="text" name="title" class="form-control" required placeholder="Announcement title"/></div>
+      <div class="form-group"><label class="form-label">Message *</label><textarea name="message" class="form-control" rows="4" required placeholder="Write your announcement message..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label>
+          <select name="type" class="form-control">
+            <option value="Info">ℹ️ Info</option>
+            <option value="Success">✅ Success</option>
+            <option value="Warning">⚠️ Warning</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> Post Announcement</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal (uses delete+add since no edit endpoint — we show a note) -->
+<div class="modal-overlay" id="editAnnModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title"><i class="fas fa-edit" style="color:var(--warning);margin-right:8px;"></i>View Announcement</span><button class="modal-close" onclick="closeModal('editAnnModal')"><i class="fas fa-times"></i></button></div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">TITLE</div>
+      <div style="font-size:16px;font-weight:700;" id="annViewTitle">–</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">MESSAGE</div>
+      <div style="font-size:14px;line-height:1.7;white-space:pre-wrap;" id="annViewMsg">–</div>
+    </div>
+    <div style="display:flex;gap:10px;" id="annViewMeta"></div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+function openEditFromCard(btn) {
+  const card = btn.closest('[data-id]');
+  document.getElementById('annViewTitle').textContent = card.dataset.title || '–';
+  document.getElementById('annViewMsg').textContent = card.dataset.msg || '–';
+  const type = card.dataset.type || 'Info';
+  const status = card.dataset.status || 'Active';
+  document.getElementById('annViewMeta').innerHTML = `
+    <span class="badge ${type === 'Success' ? 'badge-success' : type === 'Warning' ? 'badge-warning' : 'badge-info'}">${type}</span>
+    <span class="badge ${status === 'Active' ? 'badge-success' : 'badge-danger'}">${status}</span>`;
+  openModal('editAnnModal');
+}
+</script>
+</body>
+</html>

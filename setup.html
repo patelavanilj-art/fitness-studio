@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Setup — Elite Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --teal:#00d4b8;--teal-dark:#00b89f;
+  --teal-soft:rgba(0,212,184,.08);--teal-glow:rgba(0,212,184,.2);
+  --teal-border:rgba(0,212,184,.15);
+  --bg:#080e0d;--card:rgba(15,28,26,.95);--text:#e2eeec;--text-2:#6b9490;--border:#1a3330;
+}
+[data-theme="light"]{
+  --bg:#f0f4f3;--card:rgba(255,255,255,.97);--text:#0d1f1d;--text-2:#4a7a74;--border:#d0e8e4;
+}
+body{
+  font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;position:relative;overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+.bg-img{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80') center/cover no-repeat;}
+.bg-overlay{position:fixed;inset:0;z-index:1;background:rgba(4,10,10,.85);}
+[data-theme="light"] .bg-overlay{background:rgba(220,240,238,.9);}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);opacity:.12;pointer-events:none;z-index:1;}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,var(--teal),transparent);top:-150px;left:-150px;animation:float 12s ease-in-out infinite;}
+.orb2{width:350px;height:350px;background:radial-gradient(circle,#38b6e8,transparent);bottom:-100px;right:-100px;animation:float 12s ease-in-out infinite 5s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-28px);}}
+
+.setup-wrap{width:100%;max-width:660px;position:relative;z-index:10;}
+
+/* Header */
+.setup-header{text-align:center;margin-bottom:28px;animation:fadeUp .5s ease;}
+.setup-logo{
+  width:60px;height:60px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:#041210;margin:0 auto 16px;
+  box-shadow:0 0 0 6px var(--teal-soft),0 12px 32px var(--teal-glow);
+}
+.setup-header h1{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:6px;}
+.setup-header h1 span{color:var(--teal);}
+.setup-header p{color:var(--text-2);font-size:13px;line-height:1.6;}
+.skip-btn{
+  margin-top:12px;display:inline-block;
+  background:transparent;border:1px solid rgba(0,212,184,.2);
+  color:var(--text-2);padding:7px 20px;border-radius:20px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .2s;
+}
+.skip-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+/* Progress */
+.progress-wrap{margin-bottom:20px;animation:fadeUp .5s ease .1s both;}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.progress-label{font-size:11px;font-weight:700;color:var(--text-2);}
+.progress-pct{font-size:11px;font-weight:800;color:var(--teal);}
+.progress-bar-bg{height:4px;background:rgba(0,212,184,.08);border-radius:10px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),#38b6e8);border-radius:10px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* Step dots */
+.step-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+.step-dot{width:7px;height:7px;border-radius:50%;background:rgba(0,212,184,.12);border:1px solid rgba(0,212,184,.18);transition:all .3s;}
+.step-dot.active{background:var(--teal);transform:scale(1.6);box-shadow:0 0 10px var(--teal-glow);border-color:var(--teal);}
+.step-dot.done{background:var(--teal);opacity:.5;}
+
+/* Question card */
+.q-card{
+  background:var(--card);border:1px solid var(--teal-border);
+  border-radius:20px;padding:44px;
+  backdrop-filter:blur(20px);
+  box-shadow:0 32px 80px rgba(0,0,0,.5);
+  animation:slideUp .35s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.q-step-label{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.q-text{font-size:20px;font-weight:800;margin-bottom:26px;line-height:1.4;letter-spacing:-.4px;}
+
+/* Options */
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.opt-btn{
+  padding:15px 16px;
+  background:rgba(0,212,184,.03);
+  border:1.5px solid rgba(0,212,184,.1);
+  border-radius:12px;color:var(--text);
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all .2s;text-align:center;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+}
+.opt-btn:hover{border-color:var(--teal);background:rgba(0,212,184,.07);transform:translateY(-1px);}
+.opt-btn.selected{
+  border-color:var(--teal);background:rgba(0,212,184,.1);
+  color:var(--teal);box-shadow:0 4px 20px var(--teal-glow);
+}
+
+/* Nav */
+.nav-row{display:flex;gap:10px;margin-top:26px;}
+.btn-next{
+  flex:1;padding:14px;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#041210;font-size:13px;font-weight:800;cursor:pointer;border:none;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;
+}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--teal-glow);}
+.btn-next:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-back{
+  padding:14px 20px;border-radius:10px;
+  background:transparent;border:1.5px solid rgba(0,212,184,.15);
+  color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:8px;
+  font-family:'Inter',sans-serif;
+}
+.btn-back:hover{border-color:var(--teal);color:var(--teal);}
+
+/* Complete */
+.complete-screen{text-align:center;padding:16px;animation:slideUp .5s ease;}
+.complete-icon{
+  width:88px;height:88px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:38px;margin:0 auto 22px;
+  box-shadow:0 0 0 8px var(--teal-soft),0 16px 40px var(--teal-glow);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+.complete-screen h2{font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:-.5px;}
+.complete-screen h2 span{color:var(--teal);}
+.complete-screen p{color:var(--text-2);font-size:14px;margin-bottom:24px;line-height:1.7;}
+.summary-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:26px;}
+.chip{padding:6px 14px;background:rgba(0,212,184,.08);border:1px solid rgba(0,212,184,.18);border-radius:20px;font-size:12px;font-weight:700;color:var(--teal);}
+.btn-go{
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#041210;padding:15px 38px;border-radius:10px;
+  font-size:14px;font-weight:800;border:none;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:10px;
+  font-family:'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;
+}
+.btn-go:hover{transform:translateY(-3px);box-shadow:0 12px 36px var(--teal-glow);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:500px){.options-grid{grid-template-columns:1fr;}.q-text{font-size:17px;}.q-card{padding:22px;}}
+</style>
+</head>
+<body>
+<div class="bg-img"></div>
+<div class="bg-overlay"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="setup-wrap">
+  <div class="setup-header">
+    <div class="setup-logo"><i class="fas fa-dumbbell"></i></div>
+    <h1>Personalize Your <span>Plan</span></h1>
+    <p>Answer a few questions to get your perfect workout &amp; diet recommendations</p>
+    <div id="skipBtnWrap" style="display:none;">
+      <button class="skip-btn" onclick="window.location.href='/user/dashboard'">Skip — Go to Dashboard →</button>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span class="progress-label" id="progressLabel">Question 1 of 6</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%;"></div></div>
+  </div>
+
+  <div class="step-dots" id="stepDots"></div>
+
+  <div id="setupContent">
+    <div style="text-align:center;padding:60px;color:var(--text-2);">
+      <i class="fas fa-spinner fa-spin" style="font-size:28px;color:var(--teal);"></i>
+      <p style="margin-top:14px;font-size:14px;">Loading your questions...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const EF={getUser(){try{return JSON.parse(localStorage.getItem('ef_user')||'null');}catch{return null;}},setUser(u){localStorage.setItem('ef_user',JSON.stringify(u));}};
+const user=EF.getUser();
+if(!user)window.location.href='/login';
+document.documentElement.setAttribute('data-theme',user?.theme||'dark');
+
+const isEditMode = !!(user.setupDone || user.goal);
+if(isEditMode) {
+  document.getElementById('skipBtnWrap').style.display='block';
+  document.querySelector('.setup-header h1').innerHTML='Update Your <span>Answers</span>';
+  document.querySelector('.setup-header p').textContent='Change your preferences — your diet plans and workouts will update automatically.';
+}
+
+let questions=[],currentQ=0,answers={};
+
+async function loadQuestions(){
+  try{
+    const r=await fetch('/api/setup-questions');
+    questions=await r.json();
+    if(!questions.length){window.location.href='/user/dashboard';return;}
+
+    // Pre-fill existing answers from server
+    if(isEditMode && user.email){
+      try{
+        const pr=await fetch('/api/user/profile?email='+encodeURIComponent(user.email));
+        const profile=await pr.json();
+        if(profile.setupAnswers){
+          const saved=JSON.parse(profile.setupAnswers);
+          // saved is {questionId: answerValue}
+          Object.entries(saved).forEach(([k,v])=>{ answers[k]=v; });
+        }
+      }catch(e){}
+    }
+
+    buildDots();showQuestion(0);
+  }catch(e){
+    document.getElementById('setupContent').innerHTML='<p style="text-align:center;color:#f0476a;padding:40px;">Failed to load questions. Please refresh.</p>';
+  }
+}
+function buildDots(){document.getElementById('stepDots').innerHTML=questions.map((_,i)=>`<div class="step-dot" id="dot${i}"></div>`).join('');}
+function updateProgress(idx){
+  const pct=Math.round((idx/questions.length)*100);
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressLabel').textContent=`Question ${idx+1} of ${questions.length}`;
+  questions.forEach((_,i)=>{const d=document.getElementById('dot'+i);if(!d)return;d.className='step-dot'+(i<idx?' done':i===idx?' active':'');});
+}
+function showQuestion(idx){
+  currentQ=idx;updateProgress(idx);
+  const q=questions[idx];
+  const opts=q.options.split(',').map(o=>o.trim());
+  const selected=answers[q.id];
+  document.getElementById('setupContent').innerHTML=`
+    <div class="q-card">
+      <div class="q-step-label">Step ${idx+1} of ${questions.length}</div>
+      <div class="q-text">${q.question}</div>
+      <div class="options-grid">
+        ${opts.map(o=>`
+          <button class="opt-btn ${selected===o?'selected':''}" onclick="selectOpt(${q.id},'${o.replace(/'/g,"\\'")}',this)">
+            <span>${o}</span>
+          </button>`).join('')}
+      </div>
+      <div class="nav-row">
+        ${idx>0?`<button class="btn-back" onclick="showQuestion(${idx-1})"><i class="fas fa-chevron-left"></i> Back</button>`:''}
+        <button class="btn-next" id="nextBtn" onclick="nextStep()" ${!selected?'disabled':''}>
+          ${idx===questions.length-1?`<i class="fas fa-check"></i> ${isEditMode?'Save Changes':'Get My Plan'}`:'Next <i class="fas fa-chevron-right"></i>'}
+        </button>
+      </div>
+    </div>`;
+}
+function selectOpt(qId,val,btn){
+  answers[qId]=val;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const nb=document.getElementById('nextBtn');
+  if(nb)nb.disabled=false;
+}
+async function nextStep(){
+  if(currentQ<questions.length-1)showQuestion(currentQ+1);
+  else await finishSetup();
+}
+function deriveWorkoutLevel(activityLevel,experience){
+  const expMap={'New to workout':'Beginner','Some experience':'Intermediate','Regular workout':'Advanced'};
+  const actMap={'Beginner':'Beginner','Lightly Active':'Beginner','Moderately Active':'Intermediate','Very Active':'Advanced'};
+  return expMap[experience]||actMap[activityLevel]||'Beginner';
+}
+async function finishSetup(){
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressPct').textContent='100%';
+  questions.forEach((_,i)=>{const d=document.getElementById('dot'+i);if(d)d.className='step-dot done';});
+
+  // Extract values by scanning answer values against known option sets
+  // This is robust — doesn't depend on questionOrder or question IDs
+  const GOALS      = ['Lose Weight','Build Muscle','Stay Fit','Improve Flexibility'];
+  const ACTIVITIES = ['Beginner','Lightly Active','Moderately Active','Very Active'];
+  const DIETS      = ['Vegetarian','Non-Vegetarian','Vegan','No Preference'];
+  const EXPERIENCE = ['New to workout','Some experience','Regular workout'];
+  const CONDITIONS = ['No','Diabetes','Thyroid','PCOS / Hormonal'];
+
+  let rawGoal='', activityLevel='', dietPref='', experience='', condition='';
+
+  // Also try questionOrder as primary, scan as fallback
+  questions.forEach(q => {
+    const ans = answers[q.id] || '';
+    if (!ans) return;
+    if (GOALS.includes(ans))      rawGoal       = ans;
+    if (ACTIVITIES.includes(ans)) activityLevel = ans;
+    if (DIETS.includes(ans))      dietPref      = ans;
+    if (EXPERIENCE.includes(ans)) experience    = ans;
+    if (CONDITIONS.includes(ans)) condition     = ans;
+  });
+
+  const goalMap={'Lose Weight':'Lose Weight','Build Muscle':'Build Muscle','Stay Fit':'Stay Fit','Improve Flexibility':'Flexibility'};
+  const goal = goalMap[rawGoal] || rawGoal;
+  const workoutLevel = deriveWorkoutLevel(activityLevel, experience);
+  const chips = Object.values(answers).map(v=>`<span class="chip">${v}</span>`).join('');
+
+  try{
+    const res=await fetch('/api/user/save-setup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:user.email,
+        answers:JSON.stringify(answers),
+        goal,
+        activityLevel:workoutLevel,
+        dietPreference:dietPref,
+        healthCondition:condition
+      })
+    });
+    const data=await res.json();
+    const u=EF.getUser();
+    u.goal            = data.goal          || goal;
+    u.activityLevel   = data.activityLevel || workoutLevel;
+    u.dietPreference  = data.dietPreference  !== undefined ? data.dietPreference  : dietPref;
+    u.healthCondition = data.healthCondition !== undefined ? data.healthCondition : condition;
+    u.setupAnswers    = data.setupAnswers  || JSON.stringify(answers);
+    u.setupDone       = true;
+    EF.setUser(u);
+  }catch(e){
+    const u=EF.getUser();
+    u.goal=goal; u.activityLevel=workoutLevel;
+    u.dietPreference=dietPref; u.healthCondition=condition;
+    u.setupAnswers=JSON.stringify(answers); u.setupDone=true;
+    EF.setUser(u);
+  }
+  document.getElementById('setupContent').innerHTML=`
+    <div class="q-card complete-screen">
+      <div class="complete-icon">${isEditMode?'✅':'🎯'}</div>
+      <h2>${isEditMode?'Answers <span>Updated!</span>':'Your Plan is <span>Ready!</span>'}</h2>
+      <p>${isEditMode?'Your diet plans and workout recommendations have been updated based on your new answers.':'Based on your answers, we\'ve curated personalised workout videos and diet plans just for you.'}</p>
+      <div class="summary-chips">${chips}</div>
+      <button class="btn-go" onclick="window.location.href='/user/dashboard'">
+        <i class="fas fa-home"></i> Go to Dashboard
+      </button>
+    </div>`;
+}
+loadQuestions();
+</script>
+</body>
+</html>

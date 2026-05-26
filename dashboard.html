@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard </title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.welcome-bar{
+  background:var(--card);
+  border:1px solid rgba(79,110,247,.2);
+  border-radius:14px;padding:24px 28px;margin-bottom:22px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.welcome-bar::before{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(79,110,247,.1),transparent 70%);border-radius:50%;pointer-events:none;}
+.welcome-bar::after{content:'';position:absolute;left:-20px;bottom:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(6,182,212,.06),transparent 70%);border-radius:50%;pointer-events:none;}
+.welcome-bar h2{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px;}
+.welcome-bar p{color:var(--text-2);font-size:13px;}
+.welcome-bar .date-badge{background:var(--primary-light);border:1px solid rgba(79,110,247,.2);color:var(--primary);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;}
+.recent-users-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;}
+.ann-admin-list{display:flex;flex-direction:column;gap:8px;}
+.ann-admin-item{display:flex;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;transition:border-color .15s;}
+.ann-admin-item:hover{border-color:rgba(79,110,247,.2);}
+.ann-admin-dot{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ann-admin-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.ann-admin-msg{font-size:11px;color:var(--text-2);line-height:1.5;}
+.user-row-mini{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-2);}
+.user-row-mini:last-child{border-bottom:none;}
+.user-mini-avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--info));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-mini-name{font-size:13px;font-weight:600;}
+.user-mini-email{font-size:11px;color:var(--text-2);}
+.user-mini-date{margin-left:auto;font-size:11px;color:var(--text-2);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+ 
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback <span class="admin-nav-badge" id="feedbackBadge" style="display:none;"></span></a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+ 
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Dashboard</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()" title="Toggle theme"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+        <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;">A</div>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <!-- Welcome -->
+      <div class="welcome-bar">
+        <div>
+          <h2>Welcome back, Admin! 👋</h2>
+          <p>Here's what's happening with Elite Fitness today</p>
+        </div>
+        <div class="date-badge" id="currentDate"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="admin-stats">
+        <div class="admin-stat animate-delay-1">
+          <div class="admin-stat-icon" style="background:rgba(79,110,247,.12);color:#4f6ef7;"><i class="fas fa-users"></i></div>
+          <div><div class="admin-stat-val" data-count="[[${totalUsers}]]" th:attr="data-count=${totalUsers}">0</div><div class="admin-stat-lbl">Total Users</div></div>
+        </div>
+        <div class="admin-stat animate-delay-2">
+          <div class="admin-stat-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i class="fas fa-user-check"></i></div>
+          <div><div class="admin-stat-val" data-count="[[${activeUsers}]]" th:attr="data-count=${activeUsers}">0</div><div class="admin-stat-lbl">Active Users</div></div>
+        </div>
+        <div class="admin-stat animate-delay-3">
+          <div class="admin-stat-icon" style="background:rgba(6,182,212,.12);color:#06b6d4;"><i class="fas fa-utensils"></i></div>
+          <div><div class="admin-stat-val" data-count="[[${totalPlans}]]" th:attr="data-count=${totalPlans}">0</div><div class="admin-stat-lbl">Diet Plans</div></div>
+        </div>
+        <div class="admin-stat animate-delay-4">
+          <div class="admin-stat-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;"><i class="fas fa-dumbbell"></i></div>
+          <div><div class="admin-stat-val" data-count="[[${totalWorkouts}]]" th:attr="data-count=${totalWorkouts}">0</div><div class="admin-stat-lbl">Workout Plans</div></div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="grid-2" style="margin-bottom:20px;">
+        <!-- Recent Users -->
+        <div class="recent-users-card">
+          <div class="admin-card-header">
+            <span class="admin-card-title"><i class="fas fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Recent Users</span>
+            <a href="/admin/users" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div th:each="u : ${latestUsers}">
+            <div class="user-row-mini">
+              <div class="user-mini-avatar" th:text="${#strings.substring(u.name,0,1).toUpperCase()}">U</div>
+              <div>
+                <div class="user-mini-name" th:text="${u.name}">Name</div>
+                <div class="user-mini-email" th:text="${u.email}">email</div>
+              </div>
+              <div class="user-mini-date" th:text="${u.joinedDate}">–</div>
+              <span class="badge" th:classappend="${u.status == 'Active'} ? 'badge-success' : 'badge-danger'" th:text="${u.status}">Active</span>
+            </div>
+          </div>
+          <div th:if="${#lists.isEmpty(latestUsers)}" style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No users yet</div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="admin-card" style="margin:0;">
+          <div class="admin-card-header">
+            <span class="admin-card-title"><i class="fas fa-bullhorn" style="color:var(--warning);margin-right:8px;"></i>Active Announcements</span>
+            <a href="/admin/announcements" class="btn btn-secondary btn-sm">Manage</a>
+          </div>
+          <div class="ann-admin-list">
+            <div th:each="a : ${announcements}" class="ann-admin-item">
+              <div class="ann-admin-dot"
+                   th:style="${a.type == 'Success'} ? 'background:rgba(67,233,123,.15);color:#43e97b;' : (${a.type == 'Warning'} ? 'background:rgba(255,209,102,.15);color:#ffd166;' : 'background:rgba(76,201,240,.15);color:#4cc9f0;')">
+                <i class="fas" th:classappend="${a.type == 'Success'} ? 'fa-check-circle' : (${a.type == 'Warning'} ? 'fa-exclamation-triangle' : 'fa-info-circle')"></i>
+              </div>
+              <div>
+                <div class="ann-admin-title" th:text="${a.title}">Title</div>
+                <div class="ann-admin-msg" th:text="${#strings.abbreviate(a.message,80)}">Message</div>
+              </div>
+            </div>
+            <div th:if="${#lists.isEmpty(announcements)}" style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">No active announcements</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="admin-card">
+        <div class="admin-card-header"><span class="admin-card-title"><i class="fas fa-bolt" style="color:var(--warning);margin-right:8px;"></i>Quick Actions</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="/admin/users" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> Add User</a>
+          <a href="/admin/workoutplans" class="btn btn-secondary btn-sm"><i class="fas fa-dumbbell"></i> Add Workout</a>
+          <a href="/admin/dietplans" class="btn btn-secondary btn-sm"><i class="fas fa-utensils"></i> Add Diet Plan</a>
+          <a href="/admin/announcements" class="btn btn-secondary btn-sm"><i class="fas fa-bullhorn"></i> Post Announcement</a>
+          <a href="/admin/feedback" class="btn btn-secondary btn-sm"><i class="fas fa-comment-dots"></i> View Feedback</a>
+          <a href="/admin/reports" class="btn btn-secondary btn-sm"><i class="fas fa-chart-bar"></i> View Reports</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+</script>
+</body>
+</html>

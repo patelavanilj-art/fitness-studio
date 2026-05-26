@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Feedback – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<style>
+.fb-table-wrap{overflow-x:auto;}
+.fb-table{width:100%;border-collapse:collapse;font-size:13px;}
+.fb-table thead tr{border-bottom:2px solid var(--border);}
+.fb-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.fb-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+.fb-table tbody tr:hover{background:var(--bg2);}
+.fb-table td{padding:12px 14px;vertical-align:middle;}
+.fb-msg-cell{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted);}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item active"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">User Feedback</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+
+      <!-- Feedback Table -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span class="admin-card-title"><i class="fas fa-comment-dots" style="color:var(--primary);margin-right:8px;"></i>Feedback (<span th:text="${#lists.size(feedbacks)}">0</span>)</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="filterFb('all',this)" id="tabAll">All</button>
+            <button class="btn btn-secondary btn-sm" onclick="filterFb('New',this)" id="tabNew">🟡 Unread</button>
+            <button class="btn btn-secondary btn-sm" onclick="filterFb('Read',this)" id="tabRead">✅ Read</button>
+          </div>
+        </div>
+        <div class="fb-table-wrap">
+          <table class="fb-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fbContainer">
+              <tr th:each="f,i : ${feedbacks}" th:data-status="${f.status}">
+                <td th:text="${i.count}">1</td>
+                <td style="font-weight:700;" th:text="${f.userName}">Name</td>
+                <td style="color:var(--text-muted);" th:text="${f.email}">email</td>
+                <td class="fb-msg-cell" th:text="${#strings.replace(f.message, '[General]', '')}">Message</td>
+                <td>
+                  <span class="badge" th:classappend="${f.status == 'New'} ? 'badge-warning' : 'badge-success'" th:text="${f.status}">New</span>
+                </td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <form th:if="${f.status == 'New'}" th:action="@{/admin/feedback/markread/{id}(id=${f.id})}" method="post" style="display:inline;">
+                      <button type="submit" class="btn btn-success btn-sm btn-icon" title="Mark as Read"><i class="fas fa-check"></i></button>
+                    </form>
+                    <form th:action="@{/admin/feedback/delete/{id}(id=${f.id})}" method="post" style="display:inline;" onsubmit="return confirm('Delete this feedback?')">
+                      <button type="submit" class="btn btn-danger btn-sm btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(feedbacks)}">
+                <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">
+                  <i class="fas fa-comment-slash" style="font-size:30px;opacity:.3;display:block;margin-bottom:10px;"></i>No feedback yet
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+function filterFb(status, btn) {
+  document.querySelectorAll('#fbContainer tr[data-status]').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+  });
+  document.querySelectorAll('#tabAll,#tabNew,#tabRead').forEach(b => b.className = 'btn btn-secondary btn-sm');
+  btn.className = 'btn btn-primary btn-sm';
+}
+</script>
+</body>
+</html>

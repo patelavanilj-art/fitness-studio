@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Users – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item active"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">User Management</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addUserModal')"><i class="fas fa-plus"></i> Add User</button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span class="admin-card-title"><i class="fas fa-users" style="color:var(--primary);margin-right:8px;"></i>All Users (<span th:text="${#lists.size(users)}">0</span>)</span>
+          <div class="search-wrap" style="width:220px;">
+            <i class="fas fa-search"></i>
+            <input type="text" class="search-input" placeholder="Search users..." oninput="searchTable('userSearch','usersTable')" id="userSearch"/>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="usersTable">
+            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>Goal</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr th:each="u,i : ${users}"
+                  th:data-id="${u.id}"
+                  th:data-name="${u.name}"
+                  th:data-email="${u.email}"
+                  th:data-mobile="${u.mobile != null ? u.mobile : ''}"
+                  th:data-role="${u.role}"
+                  th:data-status="${u.status}"
+                  th:data-goal="${u.goal != null ? u.goal : 'Not set'}"
+                  th:data-joined="${u.joinedDate != null ? u.joinedDate : '–'}">
+                <td th:text="${i.count}">1</td>
+                <td>
+                  <div style="font-weight:600;font-size:13px;" th:text="${u.name}">Name</div>
+                </td>
+                <td th:text="${u.email}">email</td>
+                <td th:text="${u.mobile != null ? u.mobile : '–'}">–</td>
+                <td>
+                  <span th:if="${u.goal != null and !#strings.isEmpty(u.goal)}" class="badge badge-primary" style="font-size:10px;" th:text="${u.goal}">–</span>
+                  <span th:if="${u.goal == null or #strings.isEmpty(u.goal)}" style="color:var(--text-muted);font-size:12px;">Not set</span>
+                </td>
+                <td><span class="badge" th:classappend="${u.role == 'admin'} ? 'badge-primary' : 'badge-info'" th:text="${u.role}">user</span></td>
+                <td><span class="badge" th:classappend="${u.status == 'Active'} ? 'badge-success' : (${u.status == 'Blocked'} ? 'badge-danger' : 'badge-warning')" th:text="${u.status}">Active</span></td>
+                <td th:text="${u.joinedDate != null ? u.joinedDate : '–'}">–</td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditFromRow(this)" title="Edit Role/Status">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-info btn-sm btn-icon" onclick="viewUser(this)" title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" style="display:inline;"
+                          onsubmit="return confirm('Delete this user permanently?')">
+                      <button type="submit" class="btn btn-danger btn-sm btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(users)}"><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">No users found</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title"><i class="fas fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Add New User</span><button class="modal-close" onclick="closeModal('addUserModal')"><i class="fas fa-times"></i></button></div>
+    <form action="/admin/users/add" method="post">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" class="form-control" required placeholder="John Doe"/></div>
+        <div class="form-group"><label class="form-label">Email *</label><input type="email" name="email" class="form-control" required placeholder="john@example.com"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Password *</label><input type="text" name="password" class="form-control" required placeholder="Password"/></div>
+        <div class="form-group"><label class="form-label">Mobile</label><input type="text" name="mobile" class="form-control" placeholder="Mobile number"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Role</label>
+          <select name="role" class="form-control"><option value="user">User</option><option value="admin">Admin</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Blocked">Blocked</option></select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Add User</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User Modal — only Role & Status -->
+<div class="modal-overlay" id="editUserModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-user-cog" style="color:var(--primary);margin-right:8px;"></i>Edit User Access</span>
+      <button class="modal-close" onclick="closeModal('editUserModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Read-only info -->
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:18px;display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;" id="editAvatarLetter">U</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;" id="editDisplayName">–</div>
+        <div style="font-size:12px;color:var(--text-muted);" id="editDisplayEmail">–</div>
+      </div>
+    </div>
+    <form id="editUserForm" method="post">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select name="role" id="editRole" class="form-control">
+            <option value="user">👤 User</option>
+            <option value="admin">🛡️ Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" id="editStatus" class="form-control">
+            <option value="Active">✅ Active</option>
+            <option value="Inactive">⏸️ Inactive</option>
+            <option value="Blocked">🚫 Blocked</option>
+          </select>
+        </div>
+      </div>
+      <!-- Hidden fields to satisfy controller -->
+      <input type="hidden" name="name" id="editName"/>
+      <input type="hidden" name="email" id="editEmail"/>
+      <input type="hidden" name="mobile" id="editMobile"/>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- View User Details Modal -->
+<div class="modal-overlay" id="viewUserModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-user" style="color:var(--primary);margin-right:8px;"></i>User Details</span>
+      <button class="modal-close" onclick="closeModal('viewUserModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(255,101,132,.08));border:1px solid rgba(108,99,255,.2);border-radius:12px;margin-bottom:16px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;" id="viewAvatarLetter">U</div>
+      <div>
+        <div style="font-weight:800;font-size:16px;" id="viewName">–</div>
+        <div style="font-size:13px;color:var(--text-muted);" id="viewEmail">–</div>
+      </div>
+      <div style="margin-left:auto;" id="viewStatusBadge"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);">Mobile</span><span id="viewMobile" style="font-weight:600;">–</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);">Role</span><span id="viewRole" style="font-weight:600;">–</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);">Goal</span><span id="viewGoal" style="font-weight:600;">–</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;font-size:13px;">
+        <span style="color:var(--text-muted);">Joined</span><span id="viewJoined" style="font-weight:600;">–</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+function openEditFromRow(btn) {
+  const row = btn.closest('tr');
+  const name  = row.dataset.name  || '';
+  const email = row.dataset.email || '';
+  // Set form action
+  document.getElementById('editUserForm').action = '/admin/users/edit/' + row.dataset.id;
+  // Show user info (read-only)
+  document.getElementById('editAvatarLetter').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('editDisplayName').textContent  = name;
+  document.getElementById('editDisplayEmail').textContent = email;
+  // Only editable fields
+  document.getElementById('editRole').value   = row.dataset.role   || 'user';
+  document.getElementById('editStatus').value = row.dataset.status || 'Active';
+  // Hidden fields (required by controller)
+  document.getElementById('editName').value   = name;
+  document.getElementById('editEmail').value  = email;
+  document.getElementById('editMobile').value = row.dataset.mobile || '';
+  openModal('editUserModal');
+}
+
+function viewUser(btn) {
+  const row = btn.closest('tr');
+  const name   = row.dataset.name   || '–';
+  const status = row.dataset.status || '–';
+  document.getElementById('viewAvatarLetter').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('viewName').textContent    = name;
+  document.getElementById('viewEmail').textContent   = row.dataset.email  || '–';
+  document.getElementById('viewMobile').textContent  = row.dataset.mobile || '–';
+  document.getElementById('viewRole').textContent    = row.dataset.role   || '–';
+  document.getElementById('viewGoal').textContent    = row.dataset.goal   || 'Not set';
+  document.getElementById('viewJoined').textContent  = row.dataset.joined || '–';
+  const sc = { Active:'badge-success', Blocked:'badge-danger', Inactive:'badge-warning' };
+  document.getElementById('viewStatusBadge').innerHTML =
+    `<span class="badge ${sc[status]||'badge-info'}">${status}</span>`;
+  openModal('viewUserModal');
+}
+</script>
+</body>
+</html>

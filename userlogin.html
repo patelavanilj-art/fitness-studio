@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Elite Fitness — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#050c0b;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  position:relative;
+}
+
+/* ── Full-screen gym background ── */
+.bg-image{
+  position:fixed;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80') center/cover no-repeat;
+}
+.bg-dim{
+  position:fixed;inset:0;z-index:1;
+  background:rgba(3,8,8,0.72);
+}
+
+/* ── Animated glow orbs ── */
+.orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:1;}
+.orb1{width:600px;height:600px;background:rgba(0,212,184,0.12);top:-200px;left:-200px;animation:drift 14s ease-in-out infinite;}
+.orb2{width:400px;height:400px;background:rgba(56,182,232,0.08);bottom:-150px;right:-150px;animation:drift 14s ease-in-out infinite 6s;}
+@keyframes drift{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,-30px);}}
+
+/* ── Center glass card ── */
+.login-card{
+  position:relative;z-index:10;
+  width:100%;max-width:460px;
+  margin:20px;
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:24px;
+  padding:44px 40px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+  animation:cardIn .5s cubic-bezier(.4,0,.2,1);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+/* ── Brand ── */
+.card-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.brand-icon{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,#00d4b8,#00b89f);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;color:#041210;
+  box-shadow:0 0 0 4px rgba(0,212,184,0.15),0 8px 20px rgba(0,212,184,0.25);
+}
+.brand-text{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.brand-text span{color:#00d4b8;}
+
+/* ── Tabs ── */
+.tabs{
+  display:flex;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:4px;
+  margin-bottom:28px;
+  gap:4px;
+}
+.tab-btn{
+  flex:1;padding:9px 0;
+  background:transparent;border:none;
+  color:rgba(255,255,255,0.4);
+  font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;
+  border-radius:9px;
+}
+.tab-btn.active{
+  background:rgba(0,212,184,0.15);
+  color:#00d4b8;
+  box-shadow:0 2px 8px rgba(0,212,184,0.15);
+}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.65);}
+
+.form-tab{display:none;}
+.form-tab.active{display:block;}
+
+/* ── Form heading ── */
+.form-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-bottom:4px;}
+.form-sub{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:24px;line-height:1.5;}
+
+/* ── Fields ── */
+.field{margin-bottom:16px;}
+.field-label{
+  display:block;font-size:11px;font-weight:700;
+  color:rgba(255,255,255,0.4);
+  letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;
+}
+.field-wrap{position:relative;}
+.field-input{
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;color:#fff;font-size:14px;
+  font-family:'Inter',sans-serif;
+  transition:all .2s;outline:none;
+}
+.field-input::placeholder{color:rgba(255,255,255,0.2);}
+.field-input:focus{
+  border-color:rgba(0,212,184,0.6);
+  background:rgba(0,212,184,0.06);
+  box-shadow:0 0 0 3px rgba(0,212,184,0.1);
+}
+.toggle-pwd{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  cursor:pointer;color:rgba(255,255,255,0.25);
+  background:none;border:none;font-size:13px;z-index:2;transition:color .15s;
+}
+.toggle-pwd:hover{color:rgba(255,255,255,0.6);}
+
+/* ── Extras ── */
+.extras-row{display:flex;align-items:center;justify-content:space-between;margin:4px 0 20px;}
+.remember-row{display:flex;align-items:center;gap:7px;}
+.remember-row input[type="checkbox"]{accent-color:#00d4b8;width:13px;height:13px;cursor:pointer;}
+.remember-row label{font-size:12px;color:rgba(255,255,255,0.3);cursor:pointer;}
+.forgot-link{font-size:12px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color .15s;}
+.forgot-link:hover{color:#00d4b8;}
+
+/* ── Submit button ── */
+.submit-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#00d4b8,#00b89f);
+  border:none;border-radius:10px;
+  color:#041210;font-size:13px;font-weight:800;
+  cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:.4px;text-transform:uppercase;
+}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,212,184,0.35);}
+.submit-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-loader{width:15px;height:15px;border:2px solid rgba(4,18,16,.3);border-top-color:#041210;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Alert ── */
+.alert{
+  padding:11px 14px;border-radius:10px;
+  font-size:12px;font-weight:500;
+  margin-bottom:16px;display:none;
+  align-items:center;gap:8px;line-height:1.5;
+}
+.alert.error{background:rgba(240,71,106,0.12);border:1px solid rgba(240,71,106,0.25);color:#fca5a5;}
+.alert.success{background:rgba(0,212,184,0.1);border:1px solid rgba(0,212,184,0.25);color:#00d4b8;}
+
+/* ── Switch note ── */
+.switch-note{text-align:center;margin-top:20px;font-size:12px;color:rgba(255,255,255,0.25);}
+.switch-note a{color:#00d4b8;text-decoration:none;font-weight:600;}
+.switch-note a:hover{text-decoration:underline;}
+
+/* ── Footer ── */
+.card-footer{
+  text-align:center;margin-top:24px;
+  font-size:11px;color:rgba(255,255,255,0.15);
+}
+
+@media(max-width:500px){
+  .login-card{padding:32px 24px;margin:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-image"></div>
+<div class="bg-dim"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- Centered Glass Card -->
+<div class="login-card">
+
+  <!-- Brand -->
+  <div class="card-brand">
+    <div class="brand-icon"><i class="fas fa-dumbbell"></i></div>
+    <div class="brand-text">Elite <span>Fitness</span></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+    <button class="tab-btn" onclick="switchTab('signup')">Register</button>
+  </div>
+
+  <!-- Login Form -->
+  <div class="form-tab active" id="loginPanel">
+    <div class="form-title">Welcome back</div>
+    <div class="form-sub">Sign in to continue your fitness journey.</div>
+    <div class="alert error" id="loginError"><i class="fas fa-exclamation-circle"></i><span></span></div>
+
+    <div class="field">
+      <label class="field-label">Email Address</label>
+      <div class="field-wrap">
+        <input type="email" class="field-input" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <div class="field-wrap">
+        <input type="password" class="field-input" id="loginPwd" placeholder="Enter your password" autocomplete="current-password" style="padding-right:44px;"/>
+        <button type="button" class="toggle-pwd" onclick="togglePwd('loginPwd',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <div class="extras-row">
+      <div class="remember-row">
+        <input type="checkbox" id="rememberMe"/>
+        <label for="rememberMe">Remember me</label>
+      </div>
+    </div>
+    <button class="submit-btn" onclick="doLogin()" id="loginBtn">
+      <span id="loginBtnText">Sign In</span>
+      <div class="btn-loader" id="loginLoader"></div>
+    </button>
+    <div class="switch-note">Don't have an account? <a href="#" onclick="switchTab('signup')">Create one free</a></div>
+  </div>
+
+  <!-- Signup Form -->
+  <div class="form-tab" id="signupPanel">
+    <div class="form-title">Create account</div>
+    <div class="form-sub">Join Elite Fitness and start your journey today.</div>
+    <div class="alert error" id="signupError"><i class="fas fa-exclamation-circle"></i><span></span></div>
+    <div class="alert success" id="signupSuccess"><i class="fas fa-check-circle"></i><span></span></div>
+
+    <div class="field">
+      <label class="field-label">Full Name</label>
+      <input type="text" class="field-input" id="signupName" placeholder="John Doe"/>
+    </div>
+    <div class="field">
+      <label class="field-label">Email Address</label>
+      <input type="email" class="field-input" id="signupEmail" placeholder="you@example.com"/>
+    </div>
+    <div class="field">
+      <label class="field-label">Mobile Number</label>
+      <input type="tel" class="field-input" id="signupMobile" placeholder="+91 98765 43210"/>
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <div class="field-wrap">
+        <input type="password" class="field-input" id="signupPwd" placeholder="Min. 6 characters" style="padding-right:44px;"/>
+        <button type="button" class="toggle-pwd" onclick="togglePwd('signupPwd',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="submit-btn" onclick="doSignup()" id="signupBtn" style="margin-top:4px;">
+      <span id="signupBtnText">Create Account</span>
+      <div class="btn-loader" id="signupLoader"></div>
+    </button>
+    <div class="switch-note">Already a member? <a href="#" onclick="switchTab('login')">Sign in</a></div>
+  </div>
+
+  <div class="card-footer"></div>
+</div>
+
+<script>
+function switchTab(tab){
+  const isLogin=tab==='login';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(isLogin?0:1)));
+  document.getElementById('loginPanel').classList.toggle('active',isLogin);
+  document.getElementById('signupPanel').classList.toggle('active',!isLogin);
+}
+function togglePwd(id,btn){
+  const inp=document.getElementById(id);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.querySelector('i').className=`fas fa-${show?'eye-slash':'eye'}`;
+}
+function setLoading(btnId,loaderId,textId,loading){
+  document.getElementById(btnId).disabled=loading;
+  document.getElementById(loaderId).style.display=loading?'block':'none';
+  document.getElementById(textId).style.display=loading?'none':'block';
+}
+function showAlert(id,msg,type='error'){
+  const el=document.getElementById(id);
+  el.className=`alert ${type}`;
+  el.querySelector('span').textContent=msg;
+  el.style.display='flex';
+  setTimeout(()=>el.style.display='none',5000);
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pwd=document.getElementById('loginPwd').value;
+  if(!email||!pwd){showAlert('loginError','Please fill in all fields.');return;}
+  setLoading('loginBtn','loginLoader','loginBtnText',true);
+  try{
+    const r=await fetch('/api/user/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+    const d=await r.json();
+    if(d.success){
+      localStorage.setItem('ef_user',JSON.stringify({name:d.name,email,role:d.role,userId:d.userId,theme:d.theme||'dark',goal:d.goal||'',setupDone:d.setupDone||false}));
+      const redirect=d.role==='admin'?d.redirect:(d.setupDone?'/user/dashboard':'/user/setup');
+      window.location.href=redirect;
+    }else{
+      showAlert('loginError',d.message||'Login failed');
+      setLoading('loginBtn','loginLoader','loginBtnText',false);
+    }
+  }catch(e){
+    showAlert('loginError','Server error. Please try again.');
+    setLoading('loginBtn','loginLoader','loginBtnText',false);
+  }
+}
+async function doSignup(){
+  const name=document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const mobile=document.getElementById('signupMobile').value.trim();
+  const pwd=document.getElementById('signupPwd').value;
+  if(!name||!email||!pwd){showAlert('signupError','Please fill in all required fields.');return;}
+  if(pwd.length<6){showAlert('signupError','Password must be at least 6 characters.');return;}
+  setLoading('signupBtn','signupLoader','signupBtnText',true);
+  try{
+    const r=await fetch('/api/user/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,mobile,password:pwd})});
+    const d=await r.json();
+    if(!d.success){showAlert('signupError',d.message||'Signup failed');setLoading('signupBtn','signupLoader','signupBtnText',false);return;}
+    showAlert('signupSuccess','Account created! Please sign in.','success');
+    setLoading('signupBtn','signupLoader','signupBtnText',false);
+    setTimeout(()=>{
+      document.getElementById('loginEmail').value=email;
+      switchTab('login');
+    },1500);
+  }catch(e){
+    showAlert('signupError','Server error. Please try again.');
+    setLoading('signupBtn','signupLoader','signupBtnText',false);
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(document.getElementById('loginPanel').classList.contains('active'))doLogin();
+    else doSignup();
+  }
+});
+</script>
+</body>
+</html>

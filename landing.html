@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Elite Fitness — Transform Your Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#000;color:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── Hero Section ── */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;align-items:center;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80') center/cover no-repeat;
+}
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(90deg,rgba(0,0,0,.92) 40%,rgba(0,0,0,.3) 100%);
+}
+.hero-content{
+  position:relative;z-index:2;
+  max-width:1200px;margin:0 auto;
+  padding:100px 48px 0;width:100%;
+}
+
+/* Brand — fixed top left */
+.brand{
+  position:fixed;top:24px;left:36px;z-index:100;
+  display:flex;align-items:center;gap:12px;
+}
+.brand-icon{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,#00d4b8,#00b89f);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#041210;
+  box-shadow:0 0 0 3px rgba(0,212,184,.2);
+}
+.brand-name{font-size:16px;font-weight:800;letter-spacing:-.2px;}
+.brand-name span{color:#00d4b8;}
+
+/* Headline */
+.hero-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.25);
+  color:#00d4b8;font-size:11px;font-weight:700;
+  padding:5px 14px;border-radius:20px;
+  letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:22px;
+}
+.hero-title{
+  font-size:clamp(42px,6vw,80px);
+  font-weight:900;line-height:1.05;
+  letter-spacing:-2px;
+  margin-bottom:22px;
+}
+.hero-title .highlight{color:#00d4b8;}
+.hero-sub{
+  font-size:17px;color:rgba(255,255,255,.55);
+  line-height:1.7;max-width:480px;margin-bottom:38px;
+  font-weight:400;
+}
+
+/* CTA */
+.cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.btn-get-started{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#00d4b8,#00b89f);
+  color:#041210;font-size:14px;font-weight:800;
+  padding:16px 36px;border-radius:10px;border:none;
+  cursor:pointer;transition:all .25s;
+  font-family:'Inter',sans-serif;
+  letter-spacing:.3px;text-decoration:none;
+  box-shadow:0 8px 28px rgba(0,212,184,.3);
+}
+.btn-get-started:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,212,184,.45);}
+.btn-learn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;border:1.5px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.7);font-size:14px;font-weight:600;
+  padding:15px 28px;border-radius:10px;cursor:pointer;
+  transition:all .2s;font-family:'Inter',sans-serif;text-decoration:none;
+}
+.btn-learn:hover{border-color:rgba(255,255,255,.5);color:#fff;}
+
+/* Stats */
+.stats-row{
+  display:flex;gap:40px;margin-top:56px;flex-wrap:wrap;
+}
+.stat-item{text-align:left;}
+.stat-num{font-size:28px;font-weight:900;color:#00d4b8;letter-spacing:-1px;}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;font-weight:500;}
+
+/* ── Features Section ── */
+.features{
+  background:#050c0b;padding:90px 48px;
+}
+.features-inner{max-width:1200px;margin:0 auto;}
+.section-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,212,184,.08);border:1px solid rgba(0,212,184,.2);
+  color:#00d4b8;font-size:11px;font-weight:700;
+  padding:5px 14px;border-radius:20px;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;
+}
+.section-title{font-size:clamp(28px,4vw,42px);font-weight:900;letter-spacing:-1px;margin-bottom:12px;}
+.section-sub{font-size:15px;color:rgba(255,255,255,.4);max-width:500px;line-height:1.7;}
+.features-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:20px;margin-top:50px;
+}
+.feature-card{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:28px;
+  transition:all .25s;
+}
+.feature-card:hover{
+  border-color:rgba(0,212,184,.25);
+  background:rgba(0,212,184,.04);
+  transform:translateY(-4px);
+}
+.feature-icon{
+  width:50px;height:50px;border-radius:14px;
+  background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#00d4b8;margin-bottom:18px;
+}
+.feature-title{font-size:16px;font-weight:700;margin-bottom:8px;}
+.feature-desc{font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;}
+
+/* ── CTA Banner ── */
+.cta-banner{
+  background:linear-gradient(135deg,rgba(0,212,184,.12),rgba(56,182,232,.08));
+  border-top:1px solid rgba(0,212,184,.15);
+  border-bottom:1px solid rgba(0,212,184,.15);
+  padding:80px 48px;text-align:center;
+}
+.cta-banner-inner{max-width:600px;margin:0 auto;}
+.cta-banner h2{font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-1px;margin-bottom:14px;}
+.cta-banner p{font-size:15px;color:rgba(255,255,255,.45);margin-bottom:32px;line-height:1.7;}
+
+/* ── Footer ── */
+.footer{
+  background:#000;padding:28px 48px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.footer-brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;}
+.footer-brand span{color:#00d4b8;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
+
+@media(max-width:768px){
+  .hero-content{padding:0 24px;}
+  .features{padding:60px 24px;}
+  .cta-banner{padding:60px 24px;}
+  .footer{padding:24px;}
+  .stats-row{gap:24px;}
+  .hero-title{letter-spacing:-1px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-icon" style="width:56px;height:56px;font-size:24px;border-radius:14px;"><i class="fas fa-dumbbell"></i></div>
+      <div class="brand-name" style="font-size:28px;font-weight:900;letter-spacing:-.5px;">Elite <span>Fitness</span></div>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="hero-title">
+      YOUR FITNESS  <br>
+      JOURNEY STARTS<br>
+      RIGHT <span class="highlight">HERE.</span>
+    </h1>
+
+
+    <!-- CTA Buttons -->
+    <div class="cta-row">
+      <a href="/login" class="btn-get-started">
+        <i class="fas fa-arrow-right"></i> Get Started
+      </a>
+      <a href="#features" class="btn-learn">
+        <i class="fas fa-play-circle"></i> Learn More
+      </a>
+    </div>
+
+
+
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <div class="section-tag"><i class="fas fa-star"></i> Why Elite Fitness</div>
+    <h2 class="section-title">Everything You Need<br>To Reach Your Goals</h2>
+    <p class="section-sub">From personalized plans to real-time progress tracking — we've got you covered.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-dumbbell"></i></div>
+        <div class="feature-title">Personalized Workouts</div>
+        <div class="feature-desc">Video-based workout plans tailored to your fitness level, goal, and schedule.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-utensils"></i></div>
+        <div class="feature-title">Custom Diet Plans</div>
+        <div class="feature-desc">Weekly meal schedules based on your diet preference, health condition, and goal.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="feature-title">Progress Tracking</div>
+        <div class="feature-desc">Log your daily progress, track streaks, and visualize your fitness journey.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-bullseye"></i></div>
+        <div class="feature-title">Goal Setting</div>
+        <div class="feature-desc">Set your fitness goals and get matching plans automatically updated for you.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-magic"></i></div>
+        <div class="feature-title">Smart Setup</div>
+        <div class="feature-desc">Answer a few questions and get a fully personalized fitness plan in seconds.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="feature-title">Health Aware</div>
+        <div class="feature-desc">Plans adapted for health conditions like Diabetes, Thyroid, and PCOS.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA BANNER ── -->
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <h2>Ready to Transform<br>Your Body?</h2>
+    <p>Join thousands of members already crushing their fitness goals with Elite Fitness.</p>
+    <a href="/login" class="btn-get-started" style="display:inline-flex;">
+      <i class="fas fa-arrow-right"></i> Get Started — It's Free
+    </a>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-brand">
+    <i class="fas fa-dumbbell" style="color:#00d4b8;"></i>
+    Elite <span>Fitness</span>
+  </div>
+  <div class="footer-copy">© 2026 Elite Fitness. All rights reserved.</div>
+</footer>
+
+</body>
+</html>

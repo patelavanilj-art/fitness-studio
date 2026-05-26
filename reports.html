@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Reports – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.report-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.report-stat .val{font-size:32px;font-weight:900;color:var(--primary);}
+.report-stat .lbl{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;}
+.chart-card canvas{max-height:280px;}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item active"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Reports & Analytics</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <!-- Summary Stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;">
+        <div class="report-stat">
+          <div class="val" th:text="${#lists.size(users)}">0</div>
+          <div class="lbl">Total Users</div>
+        </div>
+        <div class="report-stat">
+          <div class="val" th:text="${activeUsers}">0</div>
+          <div class="lbl">Active Users</div>
+        </div>
+        <div class="report-stat">
+          <div class="val" th:text="${totalPlans}">0</div>
+          <div class="lbl">Diet Plans</div>
+        </div>
+        <div class="report-stat">
+          <div class="val" th:text="${#lists.size(users) > 0 ? #numbers.formatDecimal(activeUsers * 100.0 / #lists.size(users), 1, 0) : 0}">0</div>
+          <div class="lbl">Active Rate %</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid-2" style="margin-bottom:22px;">
+        <div class="chart-card">
+          <div class="admin-card-header" style="margin-bottom:16px;"><span class="admin-card-title">User Status Distribution</span></div>
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="admin-card-header" style="margin-bottom:16px;"><span class="admin-card-title">User Roles</span></div>
+          <canvas id="roleChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="admin-card">
+        <div class="admin-card-header"><span class="admin-card-title"><i class="fas fa-users" style="color:var(--primary);margin-right:8px;"></i>All Users Report</span></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+            <tbody>
+              <tr th:each="u,i : ${users}">
+                <td th:text="${i.count}">1</td>
+                <td th:text="${u.name}">Name</td>
+                <td th:text="${u.email}">email</td>
+                <td><span class="badge" th:classappend="${u.role == 'admin'} ? 'badge-primary' : 'badge-info'" th:text="${u.role}">user</span></td>
+                <td><span class="badge" th:classappend="${u.status == 'Active'} ? 'badge-success' : (${u.status == 'Blocked'} ? 'badge-danger' : 'badge-warning')" th:text="${u.status}">Active</span></td>
+                <td th:text="${u.joinedDate != null ? u.joinedDate : '–'}">–</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script th:inline="javascript">
+const users = /*[[${users}]]*/ [];
+const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+const textColor = isDark ? '#8888aa' : '#6666aa';
+
+// Status chart
+const statusCounts = { Active: 0, Inactive: 0, Blocked: 0 };
+users.forEach(u => { if (statusCounts[u.status] !== undefined) statusCounts[u.status]++; });
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(statusCounts),
+    datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#43e97b', '#ffd166', '#ef476f'], borderWidth: 0 }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: textColor, padding: 16 } } } }
+});
+
+// Role chart
+const roleCounts = { user: 0, admin: 0 };
+users.forEach(u => { if (roleCounts[u.role] !== undefined) roleCounts[u.role]++; });
+new Chart(document.getElementById('roleChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Users', 'Admins'],
+    datasets: [{ data: [roleCounts.user, roleCounts.admin], backgroundColor: ['rgba(108,99,255,.7)', 'rgba(255,101,132,.7)'], borderRadius: 8 }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } } }
+});
+</script>
+</body>
+</html>

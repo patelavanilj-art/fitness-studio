@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Setup Questions – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item active"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Setup Questions</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addQModal')"><i class="fas fa-plus"></i> Add Question</button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span class="admin-card-title"><i class="fas fa-question-circle" style="color:var(--primary);margin-right:8px;"></i>Setup Questions (<span th:text="${#lists.size(questions)}">0</span>)</span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Order</th><th>Question</th><th>Options</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr th:each="q : ${questions}"
+                  th:data-id="${q.id}"
+                  th:data-question="${q.question}"
+                  th:data-options="${q.options}"
+                  th:data-order="${q.questionOrder}"
+                  th:data-status="${q.status}">
+                <td><span class="badge badge-primary" th:text="${q.questionOrder}">1</span></td>
+                <td style="font-weight:600;max-width:260px;" th:text="${q.question}">Question</td>
+                <td style="font-size:12px;color:var(--text-muted);max-width:300px;" th:text="${q.options}">Options</td>
+                <td><span class="badge" th:classappend="${q.status == 'Active'} ? 'badge-success' : 'badge-danger'" th:text="${q.status}">Active</span></td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditFromRow(this)" title="Edit"><i class="fas fa-edit"></i></button>
+                    <form th:action="@{/admin/setup-questions/delete/{id}(id=${q.id})}" method="post" th:id="|delQ${q.id}|" style="display:inline;">
+                      <button type="button" class="btn btn-danger btn-sm btn-icon"
+                              th:attr="onclick='confirmDelete(\'delQ' + ${q.id} + '\',\'Delete this question?\')'">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(questions)}"><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">No questions yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addQModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Setup Question</span><button class="modal-close" onclick="closeModal('addQModal')"><i class="fas fa-times"></i></button></div>
+    <form action="/admin/setup-questions/add" method="post">
+      <div class="form-group"><label class="form-label">Question *</label><input type="text" name="question" class="form-control" required placeholder="e.g. What is your main goal?"/></div>
+      <div class="form-group">
+        <label class="form-label">Options (comma-separated) *</label>
+        <textarea name="options" class="form-control" rows="3" required placeholder="Lose Weight,Build Muscle,Stay Fit,Improve Flexibility"></textarea>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Separate each option with a comma. No spaces around commas.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Order *</label><input type="number" name="questionOrder" class="form-control" required placeholder="1" min="1" max="20"/></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Add Question</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editQModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Edit Question</span><button class="modal-close" onclick="closeModal('editQModal')"><i class="fas fa-times"></i></button></div>
+    <form id="editQForm" method="post">
+      <div class="form-group"><label class="form-label">Question *</label><input type="text" name="question" id="eqQuestion" class="form-control" required/></div>
+      <div class="form-group"><label class="form-label">Options (comma-separated) *</label><textarea name="options" id="eqOptions" class="form-control" rows="3" required></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Order</label><input type="number" name="questionOrder" id="eqOrder" class="form-control" required min="1"/></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="status" id="eqStatus" class="form-control"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+function openEditFromRow(btn) {
+  const row = btn.closest('tr');
+  document.getElementById('editQForm').action = '/admin/setup-questions/edit/' + row.dataset.id;
+  document.getElementById('eqQuestion').value = row.dataset.question || '';
+  document.getElementById('eqOptions').value = row.dataset.options || '';
+  document.getElementById('eqOrder').value = row.dataset.order || '1';
+  document.getElementById('eqStatus').value = row.dataset.status || 'Active';
+  openModal('editQModal');
+}
+</script>
+</body>
+</html>

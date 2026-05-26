@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Settings – Elite Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/theme.css" rel="stylesheet"/>
+<style>
+.settings-grid{display:grid;grid-template-columns:240px 1fr;gap:20px;}
+.settings-nav{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:14px;height:fit-content;position:sticky;top:84px;
+}
+.settings-nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text-2);transition:all .2s;margin-bottom:2px;}
+.settings-nav-item:hover{background:var(--teal-soft);color:var(--teal);}
+.settings-nav-item.active{background:var(--teal);color:#051210;font-weight:700;}
+.settings-nav-item i{width:16px;text-align:center;}
+.settings-section{display:none;animation:fadeIn .3s ease;}
+.settings-section.active{display:block;}
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;}
+.settings-card h3{font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.settings-card h3 i{color:var(--teal);}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-info h4{font-size:14px;font-weight:600;margin-bottom:3px;}
+.setting-info p{font-size:12px;color:var(--text-2);}
+/* Toggle Switch */
+.toggle-switch{position:relative;width:48px;height:26px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:26px;transition:.3s;}
+.toggle-slider::before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.toggle-slider{background:var(--teal);}
+input:checked+.toggle-slider::before{transform:translateX(22px);}
+/* Theme selector */
+.theme-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.theme-option{padding:16px;border:2px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;text-align:center;}
+.theme-option:hover{border-color:var(--teal);}
+.theme-option.selected{border-color:var(--teal);background:var(--teal-soft);}
+.theme-option .theme-preview{height:60px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.theme-dark .theme-preview{background:#060d0c;border:1px solid #162e2a;}
+.theme-light .theme-preview{background:#eef5f4;border:1px solid #cce8e4;}
+.theme-option h4{font-size:13px;font-weight:700;}
+.danger-zone{background:rgba(255,77,109,.05);border:1px solid rgba(255,77,109,.18);border-radius:16px;padding:24px;}
+.danger-zone h3{color:var(--red);font-size:16px;font-weight:700;margin-bottom:16px;}
+@media(max-width:768px){.settings-grid{grid-template-columns:1fr;}.settings-nav{position:static;display:flex;flex-wrap:wrap;gap:4px;}.settings-nav-item{flex:1;min-width:120px;justify-content:center;}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;" onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none';"></div>
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 4px;">
+      <button onclick="history.back()" title="Go Back" style="background:transparent;border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'"><i class="fas fa-chevron-left" style="font-size:11px;"></i></button>
+      <a href="/user/dashboard" class="sidebar-brand" style="margin:0;padding:0;flex:1;"><div class="brand-logo"><i class="fas fa-dumbbell"></i></div><span class="brand-text">Elite <span>Fitness</span></span></a>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-info"><div class="user-name" id="sidebarUserName">Loading...</div><div class="user-role">Member</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/user/dashboard" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="/user/workout" class="nav-item"><i class="fas fa-dumbbell"></i> Workouts</a>
+      <a href="/user/plane" class="nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/user/progress" class="nav-item"><i class="fas fa-chart-line"></i> Progress</a>
+      <a href="/user/goal" class="nav-item"><i class="fas fa-bullseye"></i> My Goals</a>
+      <a href="/user/profile" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+      <a href="/user/feedback" class="nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/user/settings" class="nav-item active"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+      <span class="topbar-title">Settings</span>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="Theme.toggle()"><i class="fas fa-sun" id="themeIcon"></i></button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="settings-grid">
+        <!-- Settings Nav -->
+        <div class="settings-nav">
+          <div class="settings-nav-item active" onclick="showSection('appearance',this)"><i class="fas fa-palette"></i> Appearance</div>
+          <div class="settings-nav-item" onclick="showSection('notifications',this)"><i class="fas fa-bell"></i> Notifications</div>
+          <div class="settings-nav-item" onclick="showSection('privacy',this)"><i class="fas fa-shield-alt"></i> Privacy</div>
+          <div class="settings-nav-item" onclick="showSection('account',this)"><i class="fas fa-user-cog"></i> Account</div>
+        </div>
+
+        <!-- Settings Content -->
+        <div>
+          <!-- Appearance -->
+          <div class="settings-section active" id="section-appearance">
+            <div class="settings-card">
+              <h3><i class="fas fa-palette"></i> Theme</h3>
+              <div class="theme-options">
+                <div class="theme-option theme-dark" id="themeDark" onclick="applyTheme('dark')">
+                  <div class="theme-preview">🌙</div>
+                  <h4>Dark Mode</h4>
+                </div>
+                <div class="theme-option theme-light" id="themeLight" onclick="applyTheme('light')">
+                  <div class="theme-preview">☀️</div>
+                  <h4>Light Mode</h4>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <h3><i class="fas fa-text-height"></i> Display</h3>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Compact Mode</h4><p>Reduce spacing for more content on screen</p></div>
+                <label class="toggle-switch"><input type="checkbox" id="compactMode" onchange="saveDisplayPref()"/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Animations</h4><p>Enable smooth transitions and animations</p></div>
+                <label class="toggle-switch"><input type="checkbox" id="animations" checked onchange="saveDisplayPref()"/><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="settings-section" id="section-notifications">
+            <div class="settings-card">
+              <h3><i class="fas fa-bell"></i> Notification Preferences</h3>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Workout Reminders</h4><p>Get reminded to complete your daily workout</p></div>
+                <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Progress Updates</h4><p>Weekly summary of your fitness progress</p></div>
+                <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>New Announcements</h4><p>Notify when admin posts new announcements</p></div>
+                <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>New Plans Available</h4><p>Alert when new workout or diet plans are added</p></div>
+                <label class="toggle-switch"><input type="checkbox"/><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy -->
+          <div class="settings-section" id="section-privacy">
+            <div class="settings-card">
+              <h3><i class="fas fa-shield-alt"></i> Privacy Settings</h3>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Profile Visibility</h4><p>Allow admin to view your profile details</p></div>
+                <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Progress Sharing</h4><p>Share your progress with the community</p></div>
+                <label class="toggle-switch"><input type="checkbox"/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Analytics</h4><p>Help improve the app with anonymous usage data</p></div>
+                <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account -->
+          <div class="settings-section" id="section-account">
+            <div class="settings-card">
+              <h3><i class="fas fa-user-cog"></i> Account Actions</h3>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Re-do Setup</h4><p>Redo the fitness setup questionnaire</p></div>
+                <a href="/user/setup" class="btn btn-secondary btn-sm">Redo Setup</a>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Edit Profile</h4><p>Update your personal information</p></div>
+                <a href="/user/profile" class="btn btn-secondary btn-sm">Edit Profile</a>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><h4>Change Password</h4><p>Update your account password</p></div>
+                <a href="/user/profile" class="btn btn-secondary btn-sm">Change</a>
+              </div>
+            </div>
+
+            <div class="danger-zone">
+              <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
+              <div class="setting-row" style="border:none;padding-top:0;">
+                <div class="setting-info"><h4>Sign Out</h4><p>Sign out from your account on this device</p></div>
+                <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+const user = EF.requireAuth('user');
+
+function showSection(id, navItem) {
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  navItem.classList.add('active');
+}
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeDark').classList.toggle('selected', t === 'dark');
+  document.getElementById('themeLight').classList.toggle('selected', t === 'light');
+  const u = EF.getUser();
+  if (u) {
+    u.theme = t;
+    EF.setUser(u);
+    fetch('/api/user/save-theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: u.email, theme: t }) }).catch(() => {});
+  }
+  Toast.show(`${t === 'dark' ? 'Dark' : 'Light'} mode activated`, 'success');
+}
+
+function saveDisplayPref() {
+  const compact = document.getElementById('compactMode').checked;
+  const anim = document.getElementById('animations').checked;
+  if (!anim) document.documentElement.style.setProperty('--transition', '0s');
+  else document.documentElement.style.removeProperty('--transition');
+  localStorage.setItem('ef_display', JSON.stringify({ compact, animations: anim }));
+}
+
+// Init theme selection
+const curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+document.getElementById('themeDark').classList.toggle('selected', curTheme === 'dark');
+document.getElementById('themeLight').classList.toggle('selected', curTheme === 'light');
+
+// Load display prefs
+const displayPrefs = JSON.parse(localStorage.getItem('ef_display') || '{}');
+if (displayPrefs.compact !== undefined) document.getElementById('compactMode').checked = displayPrefs.compact;
+if (displayPrefs.animations !== undefined) document.getElementById('animations').checked = displayPrefs.animations;
+</script>
+</body>
+</html>

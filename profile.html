@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Profile — Elite Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/theme.css" rel="stylesheet"/>
+<style>
+.profile-hero{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--teal-border);border-radius:var(--radius-xl);
+  padding:30px 32px;margin-bottom:22px;
+  display:flex;align-items:center;gap:22px;
+  position:relative;overflow:hidden;animation:fadeInUp .4s ease;
+}
+.profile-hero::before{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,184,.1),transparent 70%);border-radius:50%;pointer-events:none;}
+.profile-avatar-big{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;color:#041210;flex-shrink:0;
+  box-shadow:0 0 0 4px var(--teal-soft),0 8px 28px var(--teal-glow);
+}
+.profile-hero-info h2{font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;}
+.profile-hero-info p{font-size:13px;color:var(--text-2);}
+.joined-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--teal-soft);border:1px solid var(--teal-border);border-radius:20px;color:var(--teal);font-size:11px;font-weight:700;margin-top:8px;}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+.stat-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:18px;text-align:center;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.stat-box::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:0;transition:opacity .2s;}
+.stat-box:hover{border-color:var(--teal-border);transform:translateY(-2px);}
+.stat-box:hover::after{opacity:1;}
+.stat-box .val{font-size:24px;font-weight:900;color:var(--teal);letter-spacing:-.5px;}
+.stat-box .lbl{font-size:11px;color:var(--text-2);margin-top:4px;font-weight:500;}
+
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:26px;}
+.profile-card h3{font-size:14px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:9px;letter-spacing:-.2px;}
+.profile-card h3 i{color:var(--teal);font-size:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-2);font-size:13px;}
+.info-row:last-child{border-bottom:none;}
+.info-row .lbl{color:var(--text-2);font-weight:500;}
+
+@media(max-width:900px){.profile-grid{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
+@media(max-width:600px){.stat-row{grid-template-columns:1fr 1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;" onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none';"></div>
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 0;"><button onclick="history.back()" style="background:transparent;border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:all .15s;flex-shrink:0;" title="Go Back" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'"><i class="fas fa-chevron-left" style="font-size:12px;"></i></button>
+      <a href="/user/dashboard" class="sidebar-brand" style="margin:0;padding:0;flex:1;"><div class="brand-logo"><i class="fas fa-dumbbell"></i></div><span class="brand-text">Elite <span>Fitness</span></span></a>
+    </div>
+    <div class="sidebar-user"><div class="user-info"><div class="user-name" id="sidebarUserName">Loading...</div><div class="user-role">Member</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="/user/dashboard" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="/user/workout" class="nav-item"><i class="fas fa-dumbbell"></i> Workouts</a>
+      <a href="/user/plane" class="nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/user/progress" class="nav-item"><i class="fas fa-chart-line"></i> Progress</a>
+      <a href="/user/goal" class="nav-item"><i class="fas fa-bullseye"></i> My Goals</a>
+      <a href="/user/profile" class="nav-item active"><i class="fas fa-user"></i> Profile</a>
+      <a href="/user/feedback" class="nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/user/settings" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+  <div class="main-content">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+      <span class="topbar-title">My Profile</span>
+      <div class="topbar-actions"><button class="icon-btn" onclick="Theme.toggle()"><i class="fas fa-sun" id="themeIcon"></i></button></div>
+    </header>
+    <div class="page-content">
+      <div class="profile-hero">
+        <div class="profile-avatar-big" id="bigAvatar">U</div>
+        <div class="profile-hero-info">
+          <h2 id="profileName">Loading...</h2>
+          <p id="profileEmail">—</p>
+          <div class="joined-badge"><span id="profileJoined">—</span></div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="val" id="statHeight">—</div><div class="lbl">Height (cm)</div></div>
+        <div class="stat-box"><div class="val" id="statWeight">—</div><div class="lbl">Weight (kg)</div></div>
+        <div class="stat-box"><div class="val" id="statAge">—</div><div class="lbl">Age</div></div>
+      </div>
+
+      <!-- BMI Card -->
+      <div id="bmiCard" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Your BMI</div>
+          <div style="font-size:42px;font-weight:900;letter-spacing:-2px;" id="bmiValue">—</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;" id="bmiCategory">—</div>
+        </div>
+        <div style="flex:2;min-width:200px;">
+          <div style="height:10px;border-radius:10px;background:linear-gradient(90deg,#38b6e8 0%,#00d4b8 25%,#f5c842 50%,#f97316 75%,#ef4444 100%);position:relative;margin-bottom:8px;">
+            <div id="bmiMarker" style="position:absolute;top:-4px;width:18px;height:18px;background:#fff;border-radius:50%;border:3px solid #00d4b8;transform:translateX(-50%);transition:left .5s ease;left:0%;box-shadow:0 2px 8px rgba(0,0,0,.3);"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-2);">
+            <span>Underweight<br>&lt;18.5</span>
+            <span style="text-align:center;">Normal<br>18.5–24.9</span>
+            <span style="text-align:center;">Overweight<br>25–29.9</span>
+            <span style="text-align:right;">Obese<br>≥30</span>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--text-2);" id="bmiTip"></div>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-card">
+          <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control" id="editName"/></div>
+            <div class="form-group"><label class="form-label">Mobile</label><input type="text" class="form-control" id="editMobile"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Age</label><input type="number" class="form-control" id="editAge" placeholder="25"/></div>
+            <div class="form-group"><label class="form-label">Gender</label>
+              <select class="form-control" id="editGender">
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Height (cm)</label><input type="number" class="form-control" id="editHeight" placeholder="170"/></div>
+            <div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" class="form-control" id="editWeight" placeholder="70" step="0.1"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Fitness Goal</label>
+            <select class="form-control" id="editGoal">
+              <option value="">Select Goal</option>
+              <option value="Lose Weight">Lose Weight</option>
+              <option value="Build Muscle">Build Muscle</option>
+              <option value="Stay Fit">Stay Fit</option>
+              <option value="Improve Flexibility">Improve Flexibility</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Activity Level</label>
+            <select class="form-control" id="editActivity">
+              <option value="">Select Level</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Lightly Active">Lightly Active</option>
+              <option value="Moderately Active">Moderately Active</option>
+              <option value="Very Active">Very Active</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+
+        <div class="profile-card">
+          <h3><i class="fas fa-lock"></i> Change Password</h3>
+          <div class="form-group"><label class="form-label">Current Password</label>
+            <div style="position:relative;">
+              <input type="password" class="form-control" id="oldPwd" placeholder="Current password" style="padding-right:44px;"/>
+              <i class="fas fa-eye" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-2);cursor:pointer;" onclick="togglePwdField('oldPwd',this)"></i>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">New Password</label>
+            <div style="position:relative;">
+              <input type="password" class="form-control" id="newPwd" placeholder="Min. 6 characters" style="padding-right:44px;"/>
+              <i class="fas fa-eye" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-2);cursor:pointer;" onclick="togglePwdField('newPwd',this)"></i>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmPwd" placeholder="Confirm new password"/>
+          </div>
+          <button class="btn btn-primary" onclick="changePassword()"><i class="fas fa-key"></i> Update Password</button>
+
+          <div style="margin-top:26px;padding-top:22px;border-top:1px solid var(--border);">
+            <h3 style="margin-bottom:16px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;"><i class="fas fa-info-circle" style="color:var(--teal);"></i> Account Info</h3>
+            <div class="info-row"><span class="lbl">Email</span><span id="infoEmail">—</span></div>
+            <div class="info-row"><span class="lbl">Role</span><span class="badge badge-primary">Member</span></div>
+            <div class="info-row"><span class="lbl">Status</span><span class="badge badge-success">Active</span></div>
+            <div class="info-row"><span class="lbl">Goal</span><span id="infoGoal">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+const user = EF.requireAuth('user');
+function togglePwdField(id,icon){const inp=document.getElementById(id);const show=inp.type==='password';inp.type=show?'text':'password';icon.className=`fas fa-${show?'eye-slash':'eye'}`;}
+async function loadProfile(){
+  try{
+    const r=await fetch(`/api/user/profile?email=${encodeURIComponent(user.email)}`);
+    const p=await r.json();
+    document.getElementById('bigAvatar').textContent=(p.name||'U')[0].toUpperCase();
+    document.getElementById('profileName').textContent=p.name||'—';
+    document.getElementById('profileEmail').textContent=p.email||'—';
+    document.getElementById('profileJoined').textContent=p.joinedDate?'Joined '+p.joinedDate:'—';
+    document.getElementById('statHeight').textContent=p.height||'—';
+    document.getElementById('statWeight').textContent=p.weight||'—';
+    document.getElementById('statAge').textContent=p.age||'—';
+    document.getElementById('editName').value=p.name||'';
+    document.getElementById('editMobile').value=p.mobile||'';
+    document.getElementById('editAge').value=p.age||'';
+    document.getElementById('editGender').value=p.gender||'';
+    document.getElementById('editHeight').value=p.height||'';
+    document.getElementById('editWeight').value=p.weight||'';
+    document.getElementById('editGoal').value=p.goal||'';
+    document.getElementById('editActivity').value=p.activityLevel||'';
+    document.getElementById('infoEmail').textContent=p.email||'—';
+    document.getElementById('infoGoal').textContent=p.goal||'—';
+  }catch(e){}
+}
+async function saveProfile(){
+  const body={email:user.email,name:document.getElementById('editName').value,mobile:document.getElementById('editMobile').value,age:document.getElementById('editAge').value,gender:document.getElementById('editGender').value,height:document.getElementById('editHeight').value,weight:document.getElementById('editWeight').value,goal:document.getElementById('editGoal').value,activityLevel:document.getElementById('editActivity').value};
+  try{
+    const r=await fetch('/api/user/update-profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.success){const u=EF.getUser();u.name=body.name;EF.setUser(u);Toast.show('Profile updated!','success');loadProfile();}
+    else Toast.show(d.message||'Failed','error');
+  }catch(e){Toast.show('Server error','error');}
+}
+async function changePassword(){
+  const oldPwd=document.getElementById('oldPwd').value;
+  const newPwd=document.getElementById('newPwd').value;
+  const confirmPwd=document.getElementById('confirmPwd').value;
+  if(!oldPwd||!newPwd){Toast.show('Please fill all password fields','warning');return;}
+  if(newPwd.length<6){Toast.show('New password must be at least 6 characters','warning');return;}
+  if(newPwd!==confirmPwd){Toast.show('Passwords do not match','error');return;}
+  try{
+    const r=await fetch('/api/user/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:user.email,oldPassword:oldPwd,newPassword:newPwd})});
+    const d=await r.json();
+    if(d.success){Toast.show('Password changed!','success');['oldPwd','newPwd','confirmPwd'].forEach(id=>document.getElementById(id).value='');}
+    else Toast.show(d.message||'Failed','error');
+  }catch(e){Toast.show('Server error','error');}
+}
+loadProfile();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workout Plans – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/admin.css" rel="stylesheet"/>
+<style>
+.vthumb{width:72px;height:46px;object-fit:cover;border-radius:8px;background:#000;display:block;}
+.vthumb-empty{width:72px;height:46px;background:var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;}
+.vpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.vpick-btn{padding:5px 10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.vpick-btn:hover{border-color:var(--primary);color:var(--primary);}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="/admin/dashboard" class="admin-brand">
+      <div class="admin-brand-logo"><i class="fas fa-dumbbell"></i></div>
+      <div><span class="admin-brand-text">Elite <span>Fitness</span></span></div>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard" class="admin-nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="/admin/reports" class="admin-nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+      <a href="/admin/users" class="admin-nav-item"><i class="fas fa-users"></i> Users</a>
+      <a href="/admin/workoutplans" class="admin-nav-item active"><i class="fas fa-dumbbell"></i> Workout Plans</a>
+      <a href="/admin/dietplans" class="admin-nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/admin/announcements" class="admin-nav-item"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="/admin/feedback" class="admin-nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/admin/setup-questions" class="admin-nav-item"><i class="fas fa-question-circle"></i> Setup Questions</a>
+      <a href="/admin/settings" class="admin-nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="admin-sidebar-footer"><button class="admin-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-icon-btn admin-menu-toggle" id="adminMenuToggle"><i class="fas fa-bars"></i></button>
+      <span class="admin-topbar-title">Workout Plans</span>
+      <div class="admin-topbar-actions">
+        <button class="admin-icon-btn" onclick="AdminTheme.toggle()"><i class="fas fa-sun" id="adminThemeIcon"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Plan</button>
+      </div>
+    </header>
+
+    <div class="admin-page">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span class="admin-card-title"><i class="fas fa-dumbbell" style="color:var(--primary);margin-right:8px;"></i>Workout Plans (<span th:text="${#lists.size(plans)}">0</span>)</span>
+          <div class="search-wrap" style="width:220px;">
+            <i class="fas fa-search"></i>
+            <input type="text" class="search-input" id="wSearch" placeholder="Search..." oninput="searchTable('wSearch','wTable')"/>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="wTable">
+            <thead>
+              <tr><th>#</th><th>Video</th><th>Title</th><th>Goal</th><th>Level</th><th>Duration</th><th>Days/Week</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr th:each="p,i : ${plans}">
+                <td th:text="${i.count}">1</td>
+                <td>
+                  <div th:if="${p.videoUrl != null and !#strings.isEmpty(p.videoUrl)}">
+                    <th:block th:if="${#strings.contains(p.videoUrl,'youtu')}">
+                      <img th:src="'https://img.youtube.com/vi/' + ${#strings.substringAfter(#strings.substringAfter(p.videoUrl,'youtu.be/'),'/embed/')} + '/default.jpg'"
+                           class="vthumb" onerror="this.style.display='none'" alt="yt"/>
+                      <span style="font-size:10px;color:var(--primary);display:block;margin-top:2px;">▶ YouTube</span>
+                    </th:block>
+                    <th:block th:unless="${#strings.contains(p.videoUrl,'youtu')}">
+                      <video class="vthumb" th:src="${p.videoUrl}" muted preload="metadata"></video>
+                    </th:block>
+                  </div>
+                  <div th:unless="${p.videoUrl != null and !#strings.isEmpty(p.videoUrl)}" class="vthumb-empty">🎬</div>
+                </td>
+                <td>
+                  <div style="font-weight:700;" th:text="${p.title}">Title</div>
+                  <div style="font-size:11px;color:var(--text-muted);" th:text="${p.description != null ? #strings.abbreviate(p.description,45) : ''}">–</div>
+                </td>
+                <td><span class="badge badge-primary" th:text="${p.goal}">Goal</span></td>
+                <td>
+                  <span class="badge"
+                    th:classappend="${p.level == 'Beginner'} ? 'badge-success' : (${p.level == 'Intermediate'} ? 'badge-warning' : 'badge-danger')"
+                    th:text="${p.level}">Level</span>
+                </td>
+                <td th:text="${p.duration}">–</td>
+                <td th:text="${p.daysPerWeek}">–</td>
+                <td><span class="badge" th:classappend="${p.status == 'Active'} ? 'badge-success' : 'badge-danger'" th:text="${p.status}">Active</span></td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn btn-secondary btn-sm btn-icon" title="Edit"
+                      th:onclick="'openEditModal(' + ${p.id} + ')'"><i class="fas fa-edit"></i></button>
+                    <form th:action="@{/admin/workoutplans/delete/{id}(id=${p.id})}" method="post" style="display:inline;"
+                          onsubmit="return confirm('Delete this workout plan?')">
+                      <button type="submit" class="btn btn-danger btn-sm btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(plans)}">
+                <td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted);">
+                  <i class="fas fa-dumbbell" style="font-size:32px;opacity:.3;display:block;margin-bottom:10px;"></i>
+                  No workout plans yet. Click "Add Plan" to create one.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden plan data stored in DOM, read by JS -->
+<div id="planDataStore" style="display:none;">
+  <span th:each="p : ${plans}"
+        th:id="'pd_' + ${p.id}"
+        th:data-id="${p.id}"
+        th:data-title="${p.title}"
+        th:data-goal="${p.goal}"
+        th:data-level="${p.level}"
+        th:data-duration="${p.duration}"
+        th:data-days="${p.daysPerWeek}"
+        th:data-status="${p.status}"
+        th:data-desc="${p.description != null ? p.description : ''}"
+        th:data-video="${p.videoUrl != null ? p.videoUrl : ''}"></span>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addWorkoutModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-plus-circle" style="color:var(--primary);margin-right:8px;"></i>Add Workout Plan</span>
+      <button class="modal-close" onclick="closeModal('addWorkoutModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form action="/admin/workoutplans/add" method="post">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" name="title" class="form-control" required placeholder="e.g. 4-Week Fat Burn"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Goal *</label>
+          <select name="goal" class="form-control" required>
+            <option value="Lose Weight">🔥 Lose Weight</option>
+            <option value="Build Muscle">💪 Build Muscle</option>
+            <option value="Stay Fit">⚡ Stay Fit</option>
+            <option value="Flexibility">🧘 Flexibility</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Level *</label>
+          <select name="level" class="form-control" required>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <input type="text" name="duration" class="form-control" placeholder="e.g. 4 Weeks"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Days Per Week</label>
+          <input type="text" name="daysPerWeek" class="form-control" placeholder="e.g. 3-4 days"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="Describe the workout plan..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video</label>
+        <input type="text" name="videoUrl" id="addVideoUrl" class="form-control" placeholder="Select a video below" readonly/>
+        <div class="vpick" id="addVideoPick"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-control">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Add Plan</button>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editWorkoutModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-edit" style="color:var(--primary);margin-right:8px;"></i>Edit Workout Plan</span>
+      <button class="modal-close" onclick="closeModal('editWorkoutModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="editWorkoutForm" method="post">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" name="title" id="ewTitle" class="form-control" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Goal</label>
+          <select name="goal" id="ewGoal" class="form-control">
+            <option value="Lose Weight">🔥 Lose Weight</option>
+            <option value="Build Muscle">💪 Build Muscle</option>
+            <option value="Stay Fit">⚡ Stay Fit</option>
+            <option value="Flexibility">🧘 Flexibility</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Level</label>
+          <select name="level" id="ewLevel" class="form-control">
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <input type="text" name="duration" id="ewDuration" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Days Per Week</label>
+          <input type="text" name="daysPerWeek" id="ewDays" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" id="ewDesc" class="form-control" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video</label>
+        <input type="text" name="videoUrl" id="ewVideo" class="form-control" placeholder="Select a video below" readonly/>
+        <div class="vpick" id="editVideoPick"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select name="status" id="ewStatus" class="form-control">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-save"></i> Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+const VIDEO_LIST = [
+  '/videos/video.mp4','/videos/Video2.mp4','/videos/video3.mp4',
+  '/videos/video4.mp4','/videos/video5.mp4','/videos/videos6.mp4',
+  '/videos/videos7.mp4','/videos/videos8.mp4','/videos/videos9.mp4','/videos/videos10.mp4'
+];
+
+function buildVideoPick(containerId, inputId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  VIDEO_LIST.forEach(v => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'vpick-btn';
+    b.textContent = v.split('/').pop();
+    b.onclick = () => {
+      document.getElementById(inputId).value = v;
+      c.querySelectorAll('.vpick-btn').forEach(x => x.style.borderColor = '');
+      b.style.borderColor = 'var(--primary)';
+      b.style.color = 'var(--primary)';
+      AdminToast.show('Video selected: ' + b.textContent, 'success');
+    };
+    c.appendChild(b);
+  });
+}
+
+buildVideoPick('addVideoPick', 'addVideoUrl');
+buildVideoPick('editVideoPick', 'ewVideo');
+
+function openAddModal() {
+  openModal('addWorkoutModal');
+}
+
+function openEditModal(id) {
+  const el = document.getElementById('pd_' + id);
+  if (!el) { AdminToast.show('Plan data not found', 'error'); return; }
+  document.getElementById('editWorkoutForm').action = '/admin/workoutplans/edit/' + id;
+  document.getElementById('ewTitle').value    = el.dataset.title    || '';
+  document.getElementById('ewGoal').value     = el.dataset.goal     || 'Lose Weight';
+  document.getElementById('ewLevel').value    = el.dataset.level    || 'Beginner';
+  document.getElementById('ewDuration').value = el.dataset.duration || '';
+  document.getElementById('ewDays').value     = el.dataset.days     || '';
+  document.getElementById('ewStatus').value   = el.dataset.status   || 'Active';
+  document.getElementById('ewDesc').value     = el.dataset.desc     || '';
+  document.getElementById('ewVideo').value    = el.dataset.video    || '';
+  // Highlight current video in picker
+  const curVideo = el.dataset.video || '';
+  document.querySelectorAll('#editVideoPick .vpick-btn').forEach(b => {
+    const isMatch = curVideo && curVideo.includes(b.textContent);
+    b.style.borderColor = isMatch ? 'var(--primary)' : '';
+    b.style.color       = isMatch ? 'var(--primary)' : '';
+  });
+  openModal('editWorkoutModal');
+}
+</script>
+</body>
+</html>

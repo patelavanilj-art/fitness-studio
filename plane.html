@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Diet Plans - Elite Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/theme.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout">
+<div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;" onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none';"></div>
+<aside class="sidebar" id="sidebar">
+<div style="display:flex;align-items:center;gap:8px;padding:14px 16px 4px;">
+  <button onclick="history.back()" title="Go Back" style="background:transparent;border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'"><i class="fas fa-chevron-left" style="font-size:11px;"></i></button>
+  <a href="/user/dashboard" class="sidebar-brand" style="margin:0;padding:0;flex:1;"><div class="brand-logo"><i class="fas fa-dumbbell"></i></div><span class="brand-text">Elite <span>Fitness</span></span></a>
+</div>
+<div class="sidebar-user"><div class="user-info"><div class="user-name" id="sidebarUserName">Loading...</div><div class="user-role">Member</div></div></div>
+<nav class="sidebar-nav">
+<a href="/user/dashboard" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/user/workout" class="nav-item"><i class="fas fa-dumbbell"></i> Workouts</a>
+<a href="/user/plane" class="nav-item active"><i class="fas fa-utensils"></i> Diet Plans</a>
+<a href="/user/progress" class="nav-item"><i class="fas fa-chart-line"></i> Progress</a>
+<a href="/user/goal" class="nav-item"><i class="fas fa-bullseye"></i> My Goals</a>
+<a href="/user/profile" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+<a href="/user/feedback" class="nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+<a href="/user/settings" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+</nav>
+<div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+</aside>
+<div class="main-content">
+<header class="topbar">
+<button class="icon-btn menu-toggle" id="menuToggle" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').style.display='block';"><i class="fas fa-bars"></i></button>
+<span class="topbar-title">Diet Plans</span>
+<div class="topbar-actions"><button class="icon-btn" onclick="Theme.toggle()"><i class="fas fa-sun" id="themeIcon"></i></button></div>
+</header>
+<div class="page-content" id="mainContent"></div>
+</div>
+</div>
+
+
+
+<script src="/js/app.js"></script>
+<script>
+const user = EF.requireAuth('user');
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_FULL = {Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
+
+function getUserAnswers() {
+  const goalMap = {
+    'Lose Weight':'Lose Weight','Build Muscle':'Build Muscle',
+    'Stay Fit':'Stay Fit','Improve Flexibility':'Flexibility','Flexibility':'Flexibility'
+  };
+  const result = { goal:'', diet:'No Preference', condition:'No' };
+  try {
+    const u = EF.getUser();
+    if (!u) return result;
+    // Direct fields — always use if set (even "No" is valid for condition)
+    if (u.goal)            result.goal      = goalMap[u.goal] || u.goal;
+    if (u.dietPreference)  result.diet      = u.dietPreference;
+    if (u.healthCondition) result.condition = u.healthCondition;
+  } catch(e) {}
+  return result;
+}
+
+// -- LOAD PLANS FROM API -------------------------------------------------------
+async function loadPlans() {
+  // Always sync fresh profile from server so edited setup answers are reflected
+  const u = await EF.syncProfile();
+
+  const ans = getUserAnswers();
+  let url = '/api/dietplans';
+  const params = [];
+  if (ans.goal)      params.push('goal='      + encodeURIComponent(ans.goal));
+  if (ans.diet)      params.push('diet='      + encodeURIComponent(ans.diet));
+  // Always pass condition (even "No") so backend filters correctly
+  params.push('condition=' + encodeURIComponent(ans.condition || 'No'));
+  if (params.length) url += '?' + params.join('&');
+  try {
+    const r = await fetch(url);
+    const plans = await r.json();
+    renderPage(plans, ans);
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Failed to load</h3><p>Please refresh.</p></div>';
+  }
+}
+
+// -- RENDER PAGE ---------------------------------------------------------------
+function renderPage(plans, ans) {
+  const mc = document.getElementById('mainContent');
+  const catColor = {Fitness:'#00e6c8',Medical:'#ff4d6d','Women Health':'#ff6584',Nutrition:'#4cc9f0'};
+  const catIcon  = {Fitness:'fa-dumbbell',Medical:'fa-heartbeat','Women Health':'fa-venus',Nutrition:'fa-leaf'};
+  const goalEmoji = {'Lose Weight':'🔥','Build Muscle':'💪','Stay Fit':'⚡','Flexibility':'🧘'};
+  let html = '';
+
+  // Hero banner
+  html += '<div style="background:var(--card);border:1px solid rgba(0,230,200,.12);border-radius:14px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;">';
+  html += '<div style="position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,230,200,.1),transparent 70%);border-radius:50%;pointer-events:none;"></div>';
+  html += '<h1 style="font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:5px;"><i class="fas fa-utensils" style="color:var(--teal);margin-right:8px;"></i>Your Personalized Diet Plan</h1>';
+  html += '<p style="font-size:13px;color:var(--text-2);margin-top:4px;">Based on your setup answers</p>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">';
+  if (ans.goal) html += '<span style="background:var(--teal-soft);border:1px solid rgba(0,230,200,.2);color:var(--teal);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">' + (goalEmoji[ans.goal]||'🎯') + ' ' + ans.goal + '</span>';
+  if (ans.diet && ans.diet !== 'No Preference') html += '<span style="background:rgba(76,201,240,.1);border:1px solid rgba(76,201,240,.2);color:var(--blue);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">🥗 ' + ans.diet + '</span>';
+  if (ans.condition && ans.condition !== 'No') html += '<span style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--red);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">⚕️ ' + ans.condition + '</span>';
+  html += '</div></div>';
+
+  if (!plans.length) {
+    html += '<div class="empty-state"><i class="fas fa-utensils"></i><h3>No matching plan found</h3><p>Update your setup answers or ask admin to add a plan for your profile.</p></div>';
+    mc.innerHTML = html; return;
+  }
+
+  // Single plan — full width big card
+  const p = plans[0];
+  const color = catColor[p.category] || '#00e6c8';
+  const icon  = catIcon[p.category]  || 'fa-utensils';
+  const hasSchedule = p.weeklySchedule && p.weeklySchedule.length > 10;
+
+  html += '<div style="background:var(--card);border:2px solid ' + color + '44;border-radius:20px;overflow:hidden;max-width:780px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,.4);">';
+  html += '<div style="height:6px;background:linear-gradient(90deg,' + color + ',var(--blue));"></div>';
+  html += '<div style="padding:32px;">';
+
+  // Plan header
+  html += '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">';
+  html += '<div style="width:60px;height:60px;border-radius:16px;background:' + color + '22;border:2px solid ' + color + '44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;"><i class="fas ' + icon + '" style="color:' + color + ';"></i></div>';
+  html += '<div><div style="font-size:22px;font-weight:900;letter-spacing:-.4px;">' + p.planName + '</div>';
+  html += '<div style="font-size:13px;color:var(--text-2);margin-top:3px;">' + p.category + ' &nbsp;·&nbsp; ' + (p.duration||'–') + '</div></div></div>';
+
+  // Description
+  if (p.description) html += '<div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:20px;padding:16px;background:var(--bg2);border-radius:10px;border-left:3px solid ' + color + ';">' + p.description + '</div>';
+
+  // Tags
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">';
+  if (p.forGoal) html += '<span style="background:var(--teal-soft);border:1px solid rgba(0,230,200,.2);color:var(--teal);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">' + (goalEmoji[p.forGoal]||'🎯') + ' ' + p.forGoal + '</span>';
+  if (p.forDiet && p.forDiet !== 'No Preference') html += '<span style="background:rgba(76,201,240,.1);border:1px solid rgba(76,201,240,.2);color:var(--blue);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">🥗 ' + p.forDiet + '</span>';
+  if (p.forCondition && p.forCondition !== 'No') html += '<span style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--red);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">⚕️ ' + p.forCondition + '</span>';
+  html += '</div>';
+
+  // View Schedule button
+  html += '<div style="text-align:center;">';
+  if (hasSchedule) {
+    html += '<button onclick="viewSchedule(\'' + encodeURIComponent(p.planName) + '\',\'' + encodeURIComponent(p.weeklySchedule) + '\')" style="padding:14px 40px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#051210;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:all .2s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 28px rgba(0,212,184,.35)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"><i class="fas fa-calendar-week"></i> View Weekly Schedule</button>';
+  } else {
+    html += '<span style="font-size:13px;color:var(--text-2);">Schedule coming soon</span>';
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  mc.innerHTML = html;
+}
+
+// -- VIEW SCHEDULE MODAL -------------------------------------------------------
+function viewSchedule(encodedName, encodedSchedule) {
+  const name = decodeURIComponent(encodedName);
+  const schedStr = decodeURIComponent(encodedSchedule);
+  document.getElementById('schedModalTitle').innerHTML = '<i class="fas fa-calendar-week" style="color:var(--teal);margin-right:8px;"></i>' + name + ' — Weekly Schedule';
+  let sched = {};
+  try { sched = JSON.parse(schedStr); } catch(e) {}
+  const MEAL_META = {
+    breakfast:{ icon:'🌅', label:'Breakfast', time:'7:00 – 8:00 AM',   bg:'rgba(255,209,102,.1)', border:'rgba(255,209,102,.25)', color:'#ffd166' },
+    lunch:    { icon:'🍱', label:'Lunch',     time:'12:30 – 1:30 PM',  bg:'rgba(0,230,200,.08)',  border:'rgba(0,230,200,.2)',   color:'var(--teal)' },
+    snacks:   { icon:'🍎', label:'Snacks',    time:'4:00 – 5:00 PM',   bg:'rgba(76,201,240,.08)', border:'rgba(76,201,240,.2)',  color:'var(--blue)' },
+    dinner:   { icon:'🌙', label:'Dinner',    time:'7:30 – 8:30 PM',   bg:'rgba(255,77,109,.08)', border:'rgba(255,77,109,.2)',  color:'var(--red)' }
+  };
+  const today = new Date().toLocaleDateString('en-US',{weekday:'short'}).slice(0,3);
+  let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">';
+  DAYS.forEach(d => {
+    const isT = d === today;
+    html += '<button onclick="showDay(\'' + d + '\',this)" id="dt_' + d + '" style="padding:8px 16px;border-radius:20px;border:1.5px solid ' + (isT?'var(--teal)':'var(--border)') + ';background:' + (isT?'var(--teal)':'transparent') + ';color:' + (isT?'#051210':'var(--text-2)') + ';font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;">' + d + (isT?' 📍':'') + '</button>';
+  });
+  html += '</div>';
+  DAYS.forEach(d => {
+    const dd = sched[d] || {};
+    const isT = d === today;
+    html += '<div id="dd_' + d + '" style="display:' + (isT?'block':'none') + ';">';
+    html += '<div style="font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;"><span>' + (DAY_FULL[d]||d) + '</span>' + (isT?'<span style="background:var(--teal);color:#051210;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">TODAY</span>':'') + '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+    ['breakfast','lunch','snacks','dinner'].forEach(meal => {
+      const m = MEAL_META[meal];
+      const val = dd[meal] || '';
+      html += '<div style="background:' + m.bg + ';border:1px solid ' + m.border + ';border-radius:12px;padding:14px;display:flex;gap:14px;align-items:flex-start;">';
+      html += '<div style="flex-shrink:0;text-align:center;min-width:72px;"><div style="font-size:22px;margin-bottom:4px;">' + m.icon + '</div><div style="font-size:10px;font-weight:800;color:' + m.color + ';white-space:nowrap;">' + m.time + '</div></div>';
+      html += '<div style="flex:1;"><div style="font-size:11px;font-weight:800;color:' + m.color + ';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">' + m.label + '</div>';
+      html += val ? '<div style="font-size:14px;font-weight:600;line-height:1.6;">' + val + '</div>' : '<div style="font-size:13px;color:var(--text-muted);font-style:italic;">Not set</div>';
+      html += '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="margin-top:14px;padding:12px 16px;background:rgba(76,201,240,.08);border:1px solid rgba(76,201,240,.2);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:13px;"><span style="font-size:18px;">💧</span><span><strong>Hydration:</strong> Drink 8–10 glasses of water daily. Have a glass 30 min before each meal.</span></div>';
+  document.getElementById('schedModalBody').innerHTML = html;
+  openModal('scheduleModal');
+}
+
+function showDay(day, btn) {
+  DAYS.forEach(d => {
+    const el = document.getElementById('dd_' + d);
+    const tb = document.getElementById('dt_' + d);
+    if (el) el.style.display = d === day ? 'block' : 'none';
+    if (tb) {
+      tb.style.background   = d===day ? 'var(--teal)' : 'transparent';
+      tb.style.color        = d===day ? '#051210' : 'var(--text-2)';
+      tb.style.borderColor  = d===day ? 'var(--teal)' : 'var(--border)';
+    }
+  });
+}
+
+loadPlans();
+</script>
+
+<!-- Schedule Modal -->
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title" id="schedModalTitle">Weekly Schedule</span>
+      <button class="modal-close" onclick="closeModal('scheduleModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="schedModalBody"></div>
+  </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Progress � Elite Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="/css/theme.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.page-hero{
+  background:var(--card);border:1px solid rgba(0,230,200,.12);
+  border-radius:14px;padding:26px 30px;margin-bottom:20px;
+  position:relative;overflow:hidden;animation:fadeInUp .4s ease;
+}
+.page-hero::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,230,200,.1),transparent 70%);border-radius:50%;pointer-events:none;}
+.page-hero::after{content:'';position:absolute;left:-20px;bottom:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(76,201,240,.06),transparent 70%);border-radius:50%;pointer-events:none;}
+.page-hero h1{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:5px;}
+.page-hero h1 i{color:var(--teal);margin-right:8px;}
+.page-hero p{font-size:13px;color:var(--text-2);}
+.log-form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;}
+.log-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;}
+.chart-card canvas{max-height:230px;}
+.history-table-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.sum-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:18px;text-align:center;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:0;transition:opacity .2s;}
+.sum-card:hover{border-color:rgba(0,230,200,.2);transform:translateY(-2px);box-shadow:var(--shadow);}
+.sum-card:hover::before{opacity:1;}
+.sum-val{font-size:24px;font-weight:800;color:var(--teal);letter-spacing:-.5px;}
+.sum-lbl{font-size:11px;color:var(--text-2);margin-top:4px;}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr;}.summary-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.summary-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;" onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none';"></div>
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;align-items:center;gap:8px;padding:14px 16px 4px;">
+      <button onclick="history.back()" title="Go Back" style="background:transparent;border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'"><i class="fas fa-chevron-left" style="font-size:11px;"></i></button>
+      <a href="/user/dashboard" class="sidebar-brand" style="margin:0;padding:0;flex:1;"><div class="brand-logo"><i class="fas fa-dumbbell"></i></div><span class="brand-text">Elite <span>Fitness</span></span></a>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-info"><div class="user-name" id="sidebarUserName">Loading...</div><div class="user-role">Member</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/user/dashboard" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="/user/workout" class="nav-item"><i class="fas fa-dumbbell"></i> Workouts</a>
+      <a href="/user/plane" class="nav-item"><i class="fas fa-utensils"></i> Diet Plans</a>
+      <a href="/user/progress" class="nav-item active"><i class="fas fa-chart-line"></i> Progress</a>
+      <a href="/user/goal" class="nav-item"><i class="fas fa-bullseye"></i> My Goals</a>
+      <a href="/user/profile" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+      <a href="/user/feedback" class="nav-item"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="/user/settings" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+      <span class="topbar-title">Progress Tracker</span>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="Theme.toggle()"><i class="fas fa-sun" id="themeIcon"></i></button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="page-hero">
+        <h1><i class="fas fa-chart-line"></i> Progress Tracker</h1>
+        <p>Track your fitness journey and celebrate every milestone</p>
+      </div>
+
+      <!-- Log Form -->
+      <div class="log-form-card">
+        <div class="card-header" style="margin-bottom:16px;">
+          <div class="card-title"><i class="fas fa-plus-circle" style="color:var(--primary);margin-right:8px;"></i>Log Today's Progress</div>
+        </div>
+        <div class="log-form-grid">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" class="form-control" id="logWeight" placeholder="72.5" step="0.1"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Workout (min)</label>
+            <input type="number" class="form-control" id="logWorkout" placeholder="45"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Water (glasses)</label>
+            <input type="number" class="form-control" id="logWater" placeholder="6" min="0" max="20"/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label">Calories Burned</label>
+            <input type="number" class="form-control" id="logCalories" placeholder="350"/>
+          </div>
+          <div class="form-group" style="margin:0;grid-column:1/-1;">
+            <label class="form-label">Notes</label>
+            <input type="text" class="form-control" id="logNotes" placeholder="How was your workout today?"/>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="submitProgress()"><i class="fas fa-save"></i> Save Progress</button>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-grid" id="summaryGrid">
+        <div class="sum-card"><div class="sum-val" id="sumDays">0</div><div class="sum-lbl">Days Logged</div></div>
+        <div class="sum-card"><div class="sum-val" id="sumWorkout">0</div><div class="sum-lbl">Total Workout Min</div></div>
+        <div class="sum-card"><div class="sum-val" id="sumCalories">0</div><div class="sum-lbl">Total Calories Burned</div></div>
+        <div class="sum-card"><div class="sum-val" id="sumStreak">0</div><div class="sum-lbl">Current Streak</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="card-header" style="margin-bottom:16px;"><div class="card-title">Weight Trend</div></div>
+          <canvas id="weightChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="card-header" style="margin-bottom:16px;"><div class="card-title">Workout Minutes</div></div>
+          <canvas id="workoutChart"></canvas>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="history-table-card">
+        <div class="card-header" style="margin-bottom:16px;"><div class="card-title">Progress History</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Weight</th><th>Workout</th><th>Water</th><th>Calories</th><th>Notes</th></tr></thead>
+            <tbody id="historyBody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">No data yet. Start logging!</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+const user = EF.requireAuth('user');
+let weightChart, workoutChart;
+
+async function loadHistory() {
+  try {
+    const r = await fetch(`/api/user/progress/history?email=${encodeURIComponent(user.email)}`);
+    const data = await r.json();
+    renderHistory(data);
+    renderCharts(data);
+    renderSummary(data);
+  } catch(e) {}
+}
+
+function renderSummary(data) {
+  document.getElementById('sumDays').textContent = data.length;
+  document.getElementById('sumWorkout').textContent = data.reduce((s, d) => s + (d.workoutMinutes || 0), 0);
+  document.getElementById('sumCalories').textContent = data.reduce((s, d) => s + (d.caloriesBurned || 0), 0);
+  // Streak
+  let streak = 0;
+  const sorted = [...data].sort((a, b) => b.date.localeCompare(a.date));
+  let checkDate = new Date();
+  for (const entry of sorted) {
+    const d = new Date(entry.date);
+    const diff = Math.floor((checkDate - d) / 86400000);
+    if (diff <= 1) { streak++; checkDate = d; } else break;
+  }
+  document.getElementById('sumStreak').textContent = streak;
+}
+
+function renderHistory(data) {
+  const tbody = document.getElementById('historyBody');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">No data yet. Start logging!</td></tr>'; return; }
+  tbody.innerHTML = [...data].reverse().map(d => `
+    <tr>
+      <td>${d.date}</td>
+      <td>${d.weight ? d.weight + ' kg' : '�'}</td>
+      <td>${d.workoutMinutes ? d.workoutMinutes + ' min' : '�'}</td>
+      <td>${d.waterGlasses ? d.waterGlasses + ' glasses' : '�'}</td>
+      <td>${d.caloriesBurned ? d.caloriesBurned + ' kcal' : '�'}</td>
+      <td style="color:var(--text-muted);font-size:12px;">${d.notes || '�'}</td>
+    </tr>`).join('');
+}
+
+function renderCharts(data) {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+  const textColor = isDark ? '#8888aa' : '#6666aa';
+  const labels = data.map(d => d.date.slice(5));
+  const weights = data.map(d => d.weight);
+  const workouts = data.map(d => d.workoutMinutes);
+
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label: 'Weight (kg)', data: weights, borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,.1)', tension: .4, fill: true, pointBackgroundColor: '#6c63ff', pointRadius: 4 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } } }
+  });
+
+  if (workoutChart) workoutChart.destroy();
+  workoutChart = new Chart(document.getElementById('workoutChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Minutes', data: workouts, backgroundColor: 'rgba(67,233,123,.7)', borderRadius: 6 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } } }
+  });
+}
+
+async function submitProgress() {
+  const body = {
+    email: user.email,
+    weight: document.getElementById('logWeight').value || null,
+    workoutMinutes: document.getElementById('logWorkout').value || null,
+    waterGlasses: document.getElementById('logWater').value || null,
+    caloriesBurned: document.getElementById('logCalories').value || null,
+    notes: document.getElementById('logNotes').value || null
+  };
+  try {
+    const r = await fetch('/api/user/progress/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) {
+      Toast.show('Progress saved!', 'success');
+      ['logWeight','logWorkout','logWater','logCalories','logNotes'].forEach(id => document.getElementById(id).value = '');
+      loadHistory();
+    } else Toast.show(d.message || 'Failed', 'error');
+  } catch(e) { Toast.show('Server error', 'error'); }
+}
+
+loadHistory();
+</script>
+</body>
+</html>
